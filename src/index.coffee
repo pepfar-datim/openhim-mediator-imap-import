@@ -37,7 +37,7 @@ setupEnv = (script) ->
 
 
 handler = (script) -> (req, res) ->
-  openhimTransactionID = req.headers['x-openhim-transactionid'
+  openhimTransactionID = req.headers['x-openhim-transactionid']
   country_code= req.query.country_code
   imap_import= req.query.imap_import
   period= req.query.period
