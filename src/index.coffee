@@ -37,33 +37,15 @@ setupEnv = (script) ->
 
 
 handler = (script) -> (req, res) ->
-  openhimTransactionID = req.headers['x-openhim-transactionid']
-  format = req.query.format
-  try
-    format = format.toLowerCase()
-  catch e  
-     res.send "Undefined Collection"
-  contenttype = ''
-  if format == 'json'
-    contenttype = 'application/json'
-  if format == 'html'
-    contenttype = 'text/html'
-  if format == 'xml'
-    contenttype = 'application/xml'
-  if format == 'csv'
-    contenttype = 'application/csv'
-  collection= req.query.collection
+  openhimTransactionID = req.headers['x-openhim-transactionid'
   country_code= req.query.country_code
+  imap_import= req.query.imap_import
   period= req.query.period
   scriptCmd = path.join config.getConf().scriptsDirectory, script.filename
   args = buildArgs script
-  argsFromRequest = [format, collection]
-  if !collection?
-     argsFromRequest = [country_code,format,period]
-  #cmd = spawn scriptCmd, args, env: setupEnv(script)
+  argsFromRequest = [country_code, period,imap_import]
   cmd = spawn scriptCmd, argsFromRequest
   logger.info "[#{openhimTransactionID}] Executing #{scriptCmd} #{args.join ' '}"
-  logger.info "Format is #{format} and collection is #{collection}"
 
   out = ""
   appendToOut = (data) -> out = "#{out}#{data}"
@@ -72,22 +54,19 @@ handler = (script) -> (req, res) ->
 
   cmd.on 'close', (code) ->
     logger.info "[#{openhimTransactionID}] Script exited with status #{code}"
-    #res.set 'Content-Type', 'application/json+openhim'
-    res.set 'Content-Type', contenttype
-    if format == 'csv'
-      res.set 'Content-Disposition', 'inline; filename="'+collection+'.csv"' 
-    res.send out
 
-      #'x-mediator-urn': config.getMediatorConf().urn
-      #status: if code == 0 then 'Successful' else 'Failed'
-      #response:
-        #status: if code == 0 then 200 else 500
-        #headers:
-         # 'content-type': contenttype
-        #body: out
-     
-     #   out
-        #timestamp: new Date()
+    res.set 'Content-Type', 'application/json+openhim'
+    res.send {
+      'x-mediator-urn': config.getMediatorConf().urn
+      status: if code == 0 then 'Successful' else 'Failed'
+      response:
+        status: if code == 0 then 200 else 500
+        headers:
+          'content-type': 'application/json'
+        body: out
+        timestamp: new Date()
+    }
+
     
 
 
@@ -116,7 +95,7 @@ startExpress = ->
       for script in config.getConf().scripts
         do (script) ->
           if isScriptNameValid(script.filename) and script.filename in scriptNames
-            app.get script.endpoint, handler(script)
+            app.post script.endpoint, handler(script)
             logger.info "Initialized endpoint '#{script.endpoint}' for script '#{script.filename}'"
           else
             logger.warn "Invalid script name specified '#{script.filename}'"
