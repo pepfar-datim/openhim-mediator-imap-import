@@ -1,4 +1,5 @@
 require './init'
+fileUpload = require 'express-fileupload'
 
 logger = require 'winston'
 config = require './config'
@@ -39,15 +40,18 @@ setupEnv = (script) ->
 handler = (script) -> (req, res) ->
   openhimTransactionID = req.headers['x-openhim-transactionid']
   country_code= req.query.country_code
-  imap_import= req.query.imap_import
+  out = ""
+  imapImport = req.files.imapImport
+  `imapImport.mv('/opt/openhim-imap-import/imapImport.csv', function(err) {
+    if (err)
+      return res.status(500).send(err);
+  });`
   period= req.query.period
   scriptCmd = path.join config.getConf().scriptsDirectory, script.filename
   args = buildArgs script
-  argsFromRequest = [country_code, period,imap_import]
+  argsFromRequest = [country_code, period, "/opt/openhim-imap-import/imapImport.csv"]
   cmd = spawn scriptCmd, argsFromRequest
   logger.info "[#{openhimTransactionID}] Executing #{scriptCmd} #{args.join ' '}"
-
-  out = ""
   appendToOut = (data) -> out = "#{out}#{data}"
   cmd.stdout.on 'data', appendToOut
   cmd.stderr.on 'data', appendToOut
@@ -90,6 +94,7 @@ startExpress = ->
 
     app = express()
     app.use bodyParser.json()
+    app.use fileUpload()
 
     if config.getConf().scripts
       for script in config.getConf().scripts
