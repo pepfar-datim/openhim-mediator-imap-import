@@ -7,6 +7,7 @@ config = require './config'
 express = require 'express'
 bodyParser = require 'body-parser'
 mediatorUtils = require 'openhim-mediator-utils'
+cors = require 'cors'
 util = require './util'
 fs = require 'fs'
 path = require 'path'
@@ -36,12 +37,13 @@ setupEnv = (script) ->
   else
     process.env
 
-
 handler = (script) -> (req, res) ->
   openhimTransactionID = req.headers['x-openhim-transactionid']
   country_code= req.query.country_code
   out = ""
+  
   imapImport = req.files.imapImport
+  console.log req.files.imapImport
   `imapImport.mv('/opt/openhim-imap-import/imapImport.csv', function(err) {
     if (err)
       return res.status(500).send(err);
@@ -66,7 +68,8 @@ handler = (script) -> (req, res) ->
       response:
         status: if code == 0 then 200 else 500
         headers:
-          'content-type': 'application/json'
+          'content-type': if code == 0 then 'application/json' else 'text/plain'
+          'Access-Control-Allow-Origin' : '*'
         body: out
         timestamp: new Date()
     }
@@ -93,6 +96,9 @@ startExpress = ->
     logger.info "Available scripts: #{(scriptNames.filter (d) -> not d.startsWith '.').join ', '}"
 
     app = express()
+
+    app.use cors()
+
     app.use bodyParser.json()
     app.use fileUpload()
 
