@@ -100,5 +100,8 @@
     },
     "space_operators": {
         "level": "ignore"
+    },
+    "no_backticks": {
+        "level": "ignore"
     }
 }
