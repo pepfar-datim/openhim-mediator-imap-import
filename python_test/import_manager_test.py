@@ -32,12 +32,23 @@ class TaskServiceTest(TestCase):
         cmd = ['redis-server', '--port '+cls.redis_port]
         cls.redis_process = subprocess.Popen(cmd)
         print 'Redis server pid: ' + cls.redis_process.pid.__str__()+'\n'
+        cls.start_worker()
 
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            cls.shutdown_worker()
+        finally:
+            print '\nStopping redis server'
+            cls.redis_process.terminate()
+
+    @classmethod
+    def start_worker(cls):
         print('Starting celery worker...')
-        cmd = 'celery worker -A python_test.import_task -l info -b '+cls.broker_url+' -n test'
+        cmd = 'celery worker -A python_test.import_task -l info -b ' + cls.broker_url + ' -n test'
         wrk_proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         cls.worker_process = wrk_proc
-        print 'Celery worker pid: '+wrk_proc.pid.__str__()
+        print 'Celery worker pid: ' + wrk_proc.pid.__str__()
 
         """ Wait until the worker is ready """
         while True:
@@ -54,14 +65,10 @@ class TaskServiceTest(TestCase):
                 sys.stdout.flush()
 
     @classmethod
-    def tearDownClass(cls):
+    def shutdown_worker(cls):
         print '\nStopping celery worker'
-        #os.system('celery -A python_test.import_task control shutdown')
-        try:
-            cls.worker_process.terminate()
-        finally:
-            print '\nStopping redis server'
-            cls.redis_process.terminate()
+        cls.worker_process.terminate()
+
 
     """ ===================== Actual TaskService Tests ===================== """
 

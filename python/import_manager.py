@@ -19,7 +19,6 @@ class TaskService:
 
         unique_tasks = []
         found_task_ids = []
-        print all_tasks
         for task in all_tasks:
             task_id = task.get('id')
             if task_id not in found_task_ids:
