@@ -1,10 +1,9 @@
-import time, os
+import time
 from celery import Celery
 
 broker = 'redis://localhost:6379/'
 backend = 'redis'
 celery = Celery('test', broker=broker, backend=backend)
-#os.environ['TASK_MODULE'] = 'import_task'
 
 celery.conf.update(
     CELERY_RESULT_SERIALIZER='json'
