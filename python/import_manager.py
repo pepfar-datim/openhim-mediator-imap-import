@@ -1,17 +1,33 @@
-import os
 from celery import Celery
 
 broker = 'redis://localhost:6379/'
-#backend = 'redis'
-#module = os.getenv('TASK_MODULE', 'import_task')
 celery = Celery('tasks', broker=broker)
 
 
 class TaskService:
 
-    def get_active_tasks(self):
-        #print celery
-        return []
+    @staticmethod
+    def get_all_tasks():
+        all_tasks = []
+        inspect = celery.control.inspect()
+        for tasks1 in inspect.reserved().values():
+            all_tasks.extend(tasks1)
+        for tasks2 in inspect.scheduled().values():
+            all_tasks.extend(tasks2)
+        for tasks3 in inspect.active().values():
+            all_tasks.extend(tasks3)
 
-    def get_task_by_id(self, id):
+        unique_tasks = []
+        found_task_ids = []
+        print all_tasks
+        for task in all_tasks:
+            task_id = task.get('id')
+            if task_id not in found_task_ids:
+                found_task_ids.append(task_id)
+                unique_tasks.append(task)
+
+        return unique_tasks
+
+    @staticmethod
+    def get_task_by_id(id):
         return None

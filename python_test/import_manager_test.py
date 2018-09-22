@@ -1,12 +1,11 @@
 import subprocess
 import sys
-import time
 
 from unittest import TestCase
-from mock import Mock, patch
+from mock import patch
 from celery import Celery
 from python.import_manager import TaskService
-from python_test.import_task import delayed_echo
+from python_test.import_task import hello_world
 
 def setUpModule():
     print '\nRunning tests for Python scripts'
@@ -35,11 +34,12 @@ class TaskServiceTest(TestCase):
         print 'Redis server pid: ' + cls.redis_process.pid.__str__()+'\n'
 
         print('Starting celery worker...')
-        cmd = 'celery worker -A python_test.import_task -l info -b '+cls.broker_url+' -n '+time.time().__str__()
+        cmd = 'celery worker -A python_test.import_task -l info -b '+cls.broker_url+' -n test'
         wrk_proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         cls.worker_process = wrk_proc
         print 'Celery worker pid: '+wrk_proc.pid.__str__()
 
+        """ Wait until the worker is ready """
         while True:
             out = wrk_proc.stderr.readline()
             if (out == '' and wrk_proc.poll() is not None) or out.endswith('ready.\n'):
@@ -65,28 +65,21 @@ class TaskServiceTest(TestCase):
 
     """ ===================== Actual TaskService Tests ===================== """
 
-    def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
-        self.assertListEqual([], TaskService().get_active_tasks())
+    #def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
+    #    self.assertListEqual([], TaskService.get_all_tasks())
 
-    def test_get_active_tasks_should_return_all_active_tasks(self):
-        ret = delayed_echo.delay('Tester...')
-        #print '\n'
+    def test_get_all_tasks_should_return_all_active_tasks(self):
+        ret = hello_world.apply_async(countdown=2)
         print 'Task Id: '+ret.task_id
-        #print ret.ready()
-        print ret.get(timeout=12)
-        import time
-        time.sleep(5)
-        active_tasks = TaskService().get_active_tasks()
-        time.sleep(10)
-        print active_tasks
-        #self.assertEquals(1, active_tasks.__len__())
+        active_tasks = TaskService.get_all_tasks()
+        self.assertEquals(1, active_tasks.__len__())
 
 
 class ImportManagerTest(TestCase):
 
-    @patch.object(TaskService, 'get_active_tasks')
-    def test(self, get_active_tasks):
+    @patch.object(TaskService, 'get_all_tasks')
+    def test(self, get_all_tasks):
         print 'Running test'
         self.assertTrue(True)
-        get_active_tasks.return_value = None
-        self.assertIsNone(get_active_tasks())
+        get_all_tasks.return_value = None
+        self.assertIsNone(get_all_tasks())
