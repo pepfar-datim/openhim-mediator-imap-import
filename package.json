@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "npm run prepublish && node lib",
-    "prepublish": "grunt build",
+    "prepare": "grunt build",
     "pretest": "python -m unittest python_test.import_manager_test",
     "test": "grunt test"
   },
