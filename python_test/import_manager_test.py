@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 
@@ -5,7 +6,8 @@ from unittest import TestCase
 from mock import patch
 from celery import Celery
 from python.import_manager import TaskService
-from python_test.import_task import hello_world
+from python_test.import_task import hello_world, ENV_BROKER_URL, BROKER_PORT
+
 
 def setUpModule():
     print '\nRunning tests for Python scripts'
@@ -22,14 +24,12 @@ class TaskServiceTest(TestCase):
     redis_process = None
     worker_process = None
     """ TODO search for an available port instead """
-    redis_port = '6379'
-    broker_url = 'redis://localhost:'+redis_port+'/'
-    celery = Celery('testing', broker=broker_url)
+    celery = Celery('testing', broker=os.getenv(ENV_BROKER_URL))
 
     @classmethod
     def setUpClass(cls):
         print('Starting redis server ')
-        cmd = ['redis-server', '--port '+cls.redis_port]
+        cmd = ['redis-server', '--port '+BROKER_PORT]
         cls.redis_process = subprocess.Popen(cmd)
         print 'Redis server pid: ' + cls.redis_process.pid.__str__()+'\n'
         cls.start_worker()
@@ -45,7 +45,7 @@ class TaskServiceTest(TestCase):
     @classmethod
     def start_worker(cls):
         print('Starting celery worker...')
-        cmd = 'celery worker -A python_test.import_task -l info -b ' + cls.broker_url + ' -n test'
+        cmd = 'celery worker -A python_test.import_task -l info -b ' + os.getenv(ENV_BROKER_URL).__str__() + ' -n test'
         wrk_proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         cls.worker_process = wrk_proc
         print 'Celery worker pid: ' + wrk_proc.pid.__str__()

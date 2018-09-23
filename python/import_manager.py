@@ -1,13 +1,20 @@
+import os
 from celery import Celery
-
-broker = 'redis://localhost:6379/'
-celery = Celery('tasks', broker=broker)
 
 
 class TaskService:
 
-    @staticmethod
-    def get_all_tasks():
+    celery = None
+
+    @classmethod
+    def get_celery(cls):
+        if cls.celery is None:
+            cls.celery = Celery('tasks', broker=os.getenv('broker_url'))
+        return cls.celery
+
+    @classmethod
+    def get_all_tasks(cls):
+        celery = cls.get_celery()
         all_tasks = []
         inspect = celery.control.inspect()
         for tasks1 in inspect.reserved().values():
@@ -27,6 +34,6 @@ class TaskService:
 
         return unique_tasks
 
-    @staticmethod
-    def get_task_by_id(id):
+    @classmethod
+    def get_task_by_id(cls, id):
         return None
