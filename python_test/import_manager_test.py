@@ -73,7 +73,7 @@ class TaskServiceTest(TestCase):
     @classmethod
     def shutdown_worker(cls):
         print '\nStopping celery worker'
-        cls.worker_process.terminate()
+        celery.control.broadcast('shutdown')
 
 
     """ ===================== Actual TaskService Tests ===================== """
