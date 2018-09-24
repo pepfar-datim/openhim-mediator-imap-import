@@ -1,9 +1,7 @@
-import os
-import time
 import logging
 from celery import Celery
 
-celery = Celery('tasks')
+celery = Celery('import_task')
 celery.config_from_object('celeryconfig')
 
 @celery.task

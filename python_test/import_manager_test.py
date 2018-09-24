@@ -4,9 +4,15 @@ import sys
 
 from unittest import TestCase
 from mock import patch
-from python.import_manager import TaskService
-from python_test.import_task import redis, hello_world, ENV_BROKER_URL
+from celery import Celery
+from redislite import Redis
+from python.import_manager import ENV_BROKER_URL, TaskService
 
+
+redis = Redis()
+broker_url = 'redis+socket://' + redis.socket_file
+os.environ[ENV_BROKER_URL] = broker_url
+celery = Celery('test_tasks', broker=broker_url)
 
 def setUpModule():
     print '\nRunning tests for Python scripts'
@@ -17,6 +23,10 @@ def tearDownModule():
     print '\nEnd tests for Python scripts'
     print '======================================================================'
 
+
+@celery.task
+def hello_world():
+    return 'Hello World!'
 
 class TaskServiceTest(TestCase):
 
@@ -37,7 +47,7 @@ class TaskServiceTest(TestCase):
     @classmethod
     def start_worker(cls):
         print('Starting celery worker...')
-        cmd = 'celery worker -A python_test.import_task -l info -b ' + os.getenv(ENV_BROKER_URL).__str__() + ' -n test'
+        cmd = 'celery worker -A import_manager_test -l info -b ' + broker_url + ' -n test'
         cls.worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         cls.worker_process = cls.worker_process
         print 'Celery worker pid: ' + cls.worker_process.pid.__str__()
@@ -64,12 +74,11 @@ class TaskServiceTest(TestCase):
 
     """ ===================== Actual TaskService Tests ===================== """
 
-    #def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
-    #    self.assertListEqual([], TaskService.get_all_tasks())
+    def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
+        self.assertListEqual([], TaskService.get_all_tasks())
 
     def test_get_all_tasks_should_return_all_active_tasks(self):
-        ret = hello_world.apply_async(countdown=2)
-        print 'Task Id: '+ret.task_id
+        hello_world.apply_async(countdown=3)
         active_tasks = TaskService.get_all_tasks()
         self.assertEquals(1, active_tasks.__len__())
 
