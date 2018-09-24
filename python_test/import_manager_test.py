@@ -31,7 +31,6 @@ def hello_world():
 
 class TaskServiceTest(TestCase):
 
-    worker_process = None
     hostname = 'test'
     worker_ready = 'celery@'+hostname+' ready.\n'
 
@@ -51,13 +50,12 @@ class TaskServiceTest(TestCase):
     def start_worker(cls):
         print('Starting celery worker...')
         cmd = 'celery worker -A import_manager_test -l info -b ' + broker_url + ' -n '+cls.hostname
-        cls.worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
-        cls.worker_process = cls.worker_process
-        print 'Celery worker pid: ' + cls.worker_process.pid.__str__()
+        worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
+        print 'Celery worker pid: ' + worker_process.pid.__str__()
 
         """ Wait until the worker is ready """
         while True:
-            out = cls.worker_process.stderr.readline()
+            out = worker_process.stderr.readline()
             if out.endswith(cls.worker_ready):
                 if out.endswith(cls.worker_ready):
                     sys.stdout.write(out)
