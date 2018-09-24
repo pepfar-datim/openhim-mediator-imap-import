@@ -4,9 +4,8 @@ import sys
 
 from unittest import TestCase
 from mock import patch
-from celery import Celery
 from python.import_manager import TaskService
-from python_test.import_task import hello_world, ENV_BROKER_URL, BROKER_PORT
+from python_test.import_task import redis, hello_world, ENV_BROKER_URL
 
 
 def setUpModule():
@@ -21,17 +20,10 @@ def tearDownModule():
 
 class TaskServiceTest(TestCase):
 
-    redis_process = None
     worker_process = None
-    """ TODO search for an available port instead """
-    celery = Celery('testing', broker=os.getenv(ENV_BROKER_URL))
 
     @classmethod
     def setUpClass(cls):
-        print('Starting redis server ')
-        cmd = ['redis-server', '--port '+BROKER_PORT]
-        cls.redis_process = subprocess.Popen(cmd)
-        print 'Redis server pid: ' + cls.redis_process.pid.__str__()+'\n'
         cls.start_worker()
 
     @classmethod
@@ -39,21 +31,21 @@ class TaskServiceTest(TestCase):
         try:
             cls.shutdown_worker()
         finally:
-            print '\nStopping redis server'
-            cls.redis_process.terminate()
+            print '\nShutting down redis server'
+            redis.shutdown()
 
     @classmethod
     def start_worker(cls):
         print('Starting celery worker...')
         cmd = 'celery worker -A python_test.import_task -l info -b ' + os.getenv(ENV_BROKER_URL).__str__() + ' -n test'
-        wrk_proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
-        cls.worker_process = wrk_proc
-        print 'Celery worker pid: ' + wrk_proc.pid.__str__()
+        cls.worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
+        cls.worker_process = cls.worker_process
+        print 'Celery worker pid: ' + cls.worker_process.pid.__str__()
 
         """ Wait until the worker is ready """
         while True:
-            out = wrk_proc.stderr.readline()
-            if (out == '' and wrk_proc.poll() is not None) or out.endswith('ready.\n'):
+            out = cls.worker_process.stderr.readline()
+            if (out == '' and cls.worker_process.poll() is not None) or out.endswith('ready.\n'):
                 if out.endswith('ready.\n'):
                     sys.stdout.write(out)
                     sys.stdout.flush()
