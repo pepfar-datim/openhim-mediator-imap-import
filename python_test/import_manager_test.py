@@ -28,9 +28,12 @@ def tearDownModule():
 def hello_world():
     return 'Hello World!'
 
+
 class TaskServiceTest(TestCase):
 
     worker_process = None
+    hostname = 'test'
+    worker_ready = 'celery@'+hostname+' ready.\n'
 
     @classmethod
     def setUpClass(cls):
@@ -47,7 +50,7 @@ class TaskServiceTest(TestCase):
     @classmethod
     def start_worker(cls):
         print('Starting celery worker...')
-        cmd = 'celery worker -A import_manager_test -l info -b ' + broker_url + ' -n test'
+        cmd = 'celery worker -A import_manager_test -l info -b ' + broker_url + ' -n '+cls.hostname
         cls.worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         cls.worker_process = cls.worker_process
         print 'Celery worker pid: ' + cls.worker_process.pid.__str__()
@@ -55,13 +58,14 @@ class TaskServiceTest(TestCase):
         """ Wait until the worker is ready """
         while True:
             out = cls.worker_process.stderr.readline()
-            if (out == '' and cls.worker_process.poll() is not None) or out.endswith('ready.\n'):
-                if out.endswith('ready.\n'):
+            if out.endswith(cls.worker_ready):
+                if out.endswith(cls.worker_ready):
                     sys.stdout.write(out)
                     sys.stdout.flush()
 
                 print 'Worker started successfully\n'
                 break
+
             if out != '':
                 sys.stdout.write(out)
                 sys.stdout.flush()
