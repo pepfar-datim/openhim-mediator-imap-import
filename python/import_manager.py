@@ -11,7 +11,8 @@ class TaskService:
     @classmethod
     def get_celery(cls):
         if cls.celery is None:
-            cls.celery = Celery('tasks', broker=os.getenv(ENV_BROKER_URL))
+            broker_url = os.getenv(ENV_BROKER_URL)
+            cls.celery = Celery('tasks', broker=broker_url, backend=ENV_BROKER_URL)
         return cls.celery
 
     @classmethod
