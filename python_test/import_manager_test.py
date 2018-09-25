@@ -85,7 +85,7 @@ class TaskServiceTest(TestCase):
     def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
         self.assertListEqual([], TaskService.get_all_tasks())
 
-    def test_get_aall_tasks_should_return_all_active_tasks(self):
+    def test_get_all_tasks_should_include_scheduled_tasks(self):
         ret = hello_world.apply_async(countdown=5)
         active_tasks = TaskService.get_all_tasks()
         self.assertEquals(1, active_tasks.__len__())
