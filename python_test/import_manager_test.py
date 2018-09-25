@@ -38,10 +38,7 @@ class TaskServiceTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        print('Starting redis server ...')
-        cmd = [redis_base_dir+'/bin/redis-server', redis_base_dir+'/redis.conf']
-        cls.redis_process = subprocess.Popen(cmd)
-        print 'Redis server pid: ' + cls.redis_process.pid.__str__() + '\n'
+        cls.start_redis_server()
         cls.start_worker()
 
     @classmethod
@@ -49,8 +46,19 @@ class TaskServiceTest(TestCase):
         try:
             cls.shutdown_worker()
         finally:
-            print '\nShutting down redis server'
-            cls.redis_process.terminate()
+            cls.stop_redis_server()
+
+    @classmethod
+    def start_redis_server(cls):
+        print('Starting redis server ...')
+        cmd = [redis_base_dir + '/bin/redis-server', redis_base_dir + '/redis.conf']
+        cls.redis_process = subprocess.Popen(cmd)
+        print 'Redis server pid: ' + cls.redis_process.pid.__str__() + '\n'
+
+    @classmethod
+    def stop_redis_server(cls):
+        print '\nShutting down redis server'
+        cls.redis_process.terminate()
 
     @classmethod
     def start_worker(cls):
