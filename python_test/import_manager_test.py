@@ -7,12 +7,13 @@ from mock import patch
 from celery import Celery
 from python.import_manager import ENV_BROKER_URL, TaskService
 
-
-redis_base_dir = './redis'
-redis_port = '6380'
+dir_path = os.path.dirname(os.path.realpath(__file__))
+redis_base_dir = dir_path+'/redis'
+print redis_base_dir
+redis_port = '6381'
 broker_url = 'redis://localhost:'+redis_port+'/'
 os.environ[ENV_BROKER_URL] = broker_url
-celery = Celery('test_tasks', broker=broker_url, backend=broker_url)
+celery = Celery('import_manager_test', broker=broker_url, backend=broker_url)
 
 def setUpModule():
     print '\nRunning tests for Python scripts'
@@ -48,19 +49,18 @@ class TaskServiceTest(TestCase):
         try:
             cls.shutdown_worker()
         finally:
-            dbFile = redis_base_dir+'./dump.rdb'
-            if os.path.exists(dbFile):
-                os.remove(dbFile)
-            else:
-                print 'No database file found'
-
             print '\nShutting down redis server'
             cls.redis_process.terminate()
 
     @classmethod
     def start_worker(cls):
         print('Starting celery worker...')
-        cmd = 'celery worker -A import_manager_test -l info -b ' + broker_url + ' -n '+cls.hostname
+        #We need to be able to run this with npm test or as a single Test in the IDE
+        module = '.import_manager_test'
+        package = 'python_test'
+        if os.getcwd().__contains__(package) is False:
+            module = package+module
+        cmd = 'celery worker -A '+module+' -l info -b ' + broker_url + ' -n '+cls.hostname
         worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         print 'Celery worker pid: ' + worker_process.pid.__str__()
 
@@ -87,7 +87,6 @@ class TaskServiceTest(TestCase):
 
     def test_get_aall_tasks_should_return_all_active_tasks(self):
         ret = hello_world.apply_async(countdown=5)
-        print ret.id
         active_tasks = TaskService.get_all_tasks()
         self.assertEquals(1, active_tasks.__len__())
         #This effectively forces the test to end after the task has completed
