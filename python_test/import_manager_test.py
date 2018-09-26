@@ -104,21 +104,20 @@ class TaskTest(TestCase):
         task_id = 'ug'
         result = wait_task.apply_async(task_id=task_id, args=[5])
         tasks = import_manager.get_all_tasks()
+        # This ensures the worker thread isn't still running when the test ends
+        result.get()
         self.assertEquals(1, len(tasks))
         task = tasks[0]
         self.assertEquals(task_id, task.get('id'))
-        # This effectively forces the test to end after the task has completed
-        result.get()
 
     def test_get_all_tasks_should_include_scheduled_tasks(self):
         result = hello_world.apply_async(countdown=5)
         tasks = import_manager.get_all_tasks()
+        result.get()
         self.assertEquals(1, len(tasks))
         task = tasks[0]
         self.assertEquals(result.id, task.get('request').get('id'))
-        self.assertEquals('PENDING', result.state)
         self.assertIsNotNone(task.get('eta'))
-        result.get()
 
     # TODO include tests that ensures reserved (recieved and not scheduled but waiting for execution)
 
