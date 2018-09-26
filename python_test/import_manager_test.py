@@ -6,7 +6,8 @@ import time
 from unittest import TestCase
 from mock import patch
 from celery import Celery
-from python.import_manager import ENV_BROKER_URL, TaskService
+from python import import_manager
+from python.import_manager import ENV_BROKER_URL
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 redis_base_dir = dir_path+'/redis'
@@ -36,7 +37,7 @@ def wait_task(duration):
     time.sleep(duration)
 
 
-class TaskServiceTest(TestCase):
+class TaskTest(TestCase):
 
     redis_process = None
     hostname = 'test'
@@ -69,12 +70,12 @@ class TaskServiceTest(TestCase):
     @classmethod
     def start_worker(cls):
         print('Starting celery worker...')
-        #We need to be able to run this with npm test or as a single Test in the IDE
+        # We need to be able to run this with npm test or as a single Test in the IDE
         module = '.import_manager_test'
         package = 'python_test'
         if os.getcwd().__contains__(package) is False:
             module = package+module
-        cmd = 'celery worker -A '+module+' -l info -b ' + broker_url + ' -n '+cls.hostname
+        cmd = 'celery worker -A '+module+' -l debug -c 2 -b ' + broker_url + ' -n '+cls.hostname
         worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         print 'Celery worker pid: ' + worker_process.pid.__str__()
 
@@ -96,22 +97,22 @@ class TaskServiceTest(TestCase):
 
     """ ===================== Actual TaskService Tests ===================== """
 
+    def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
+        self.assertListEqual([], import_manager.get_all_tasks())
+
     def test_get_all_tasks_should_include_active_tasks(self):
-        task_id1 = 'ug1'
-        result = wait_task.apply_async(task_id=task_id1, args=[8])
-        tasks = TaskService.get_all_tasks()
+        task_id = 'ug'
+        result = wait_task.apply_async(task_id=task_id, args=[5])
+        tasks = import_manager.get_all_tasks()
         self.assertEquals(1, len(tasks))
         task = tasks[0]
-        self.assertEquals(result.id, task.get('id'))
-        #This effectively forces the test to end after the task has completed
+        self.assertEquals(task_id, task.get('id'))
+        # This effectively forces the test to end after the task has completed
         result.get()
-
-    def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
-        self.assertListEqual([], TaskService.get_all_tasks())
 
     def test_get_all_tasks_should_include_scheduled_tasks(self):
         result = hello_world.apply_async(countdown=5)
-        tasks = TaskService.get_all_tasks()
+        tasks = import_manager.get_all_tasks()
         self.assertEquals(1, len(tasks))
         task = tasks[0]
         self.assertEquals(result.id, task.get('request').get('id'))
@@ -119,10 +120,12 @@ class TaskServiceTest(TestCase):
         self.assertIsNotNone(task.get('eta'))
         result.get()
 
+    # TODO include tests that ensures reserved (recieved and not scheduled but waiting for execution)
+
 
 class ImportManagerTest(TestCase):
 
-    @patch.object(TaskService, 'get_all_tasks')
+    @patch.object(import_manager, 'get_all_tasks')
     def test(self, get_all_tasks):
         print 'Running test'
         self.assertTrue(True)
