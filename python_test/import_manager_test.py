@@ -7,7 +7,7 @@ from unittest import TestCase
 from mock import patch
 from celery import Celery
 from python import import_manager
-from python.import_manager import ENV_BROKER_URL
+from python.import_manager import ENV_BROKER_URL, TASK_ID_KEY, TASK_ID_SEPARATOR
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 redis_base_dir = dir_path+'/redis'
@@ -108,7 +108,7 @@ class TaskTest(TestCase):
         result.get()
         self.assertEquals(1, len(tasks))
         task = tasks[0]
-        self.assertEquals(task_id, task.get('id'))
+        self.assertEquals(task_id, task.get(TASK_ID_KEY))
 
     def test_get_all_tasks_should_include_scheduled_tasks(self):
         result = hello_world.apply_async(countdown=5)
@@ -116,7 +116,7 @@ class TaskTest(TestCase):
         result.get()
         self.assertEquals(1, len(tasks))
         task = tasks[0]
-        self.assertEquals(result.id, task.get('request').get('id'))
+        self.assertEquals(result.id, task.get('request').get(TASK_ID_KEY))
         self.assertIsNotNone(task.get('eta'))
 
     # TODO include tests that ensures reserved (recieved and not scheduled but waiting for execution)
@@ -124,9 +124,13 @@ class TaskTest(TestCase):
 
 class ImportManagerTest(TestCase):
 
-    @patch.object(import_manager, 'get_all_tasks')
-    def test(self, get_all_tasks):
-        print 'Running test'
-        self.assertTrue(True)
-        get_all_tasks.return_value = None
-        self.assertIsNone(get_all_tasks())
+    @patch('python.import_manager.get_all_tasks')
+    def test_has_existing_import_should_return_false_if_there_no_import_task_for_the_country(self, get_all_tasks):
+        get_all_tasks.return_value = [{TASK_ID_KEY: 'KE'+TASK_ID_SEPARATOR+'some-uuid'}]
+        self.assertFalse(import_manager.has_existing_import('UG'))
+
+    @patch('python.import_manager.get_all_tasks')
+    def test_has_existing_import_should_return_True_if_there_an_import_task_for_the_country(self, get_all_tasks):
+        country_code = 'UG'
+        get_all_tasks.return_value = [{TASK_ID_KEY: country_code+TASK_ID_SEPARATOR+'some-uuid'}]
+        self.assertTrue(import_manager.has_existing_import(country_code))
