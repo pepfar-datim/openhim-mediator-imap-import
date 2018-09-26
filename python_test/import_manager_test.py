@@ -75,7 +75,7 @@ class TaskTest(TestCase):
         package = 'python_test'
         if os.getcwd().__contains__(package) is False:
             module = package+module
-        cmd = 'celery worker -A '+module+' -l debug -c 2 -b ' + broker_url + ' -n '+cls.hostname
+        cmd = 'celery worker -A '+module+' -l info -b ' + broker_url + ' -n '+cls.hostname
         worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         print 'Celery worker pid: ' + worker_process.pid.__str__()
 
