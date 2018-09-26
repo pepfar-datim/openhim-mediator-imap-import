@@ -38,5 +38,5 @@ class TaskService:
         return unique_tasks
 
     @classmethod
-    def get_task_by_id(cls, id):
-        return None
+    def get_task_status(cls, task_id):
+        return cls.get_celery().control.inspect().query_task(task_id)

@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import time
 
 from unittest import TestCase
 from mock import patch
@@ -28,6 +29,11 @@ def tearDownModule():
 @celery.task
 def hello_world():
     return 'Hello World!'
+
+@celery.task
+def wait_task(duration):
+    print 'Running for '+duration.__str__()+'s'
+    time.sleep(duration)
 
 
 class TaskServiceTest(TestCase):
@@ -90,15 +96,28 @@ class TaskServiceTest(TestCase):
 
     """ ===================== Actual TaskService Tests ===================== """
 
+    def test_get_all_tasks_should_include_active_tasks(self):
+        task_id1 = 'ug1'
+        result = wait_task.apply_async(task_id=task_id1, args=[8])
+        tasks = TaskService.get_all_tasks()
+        self.assertEquals(1, len(tasks))
+        task = tasks[0]
+        self.assertEquals(result.id, task.get('id'))
+        #This effectively forces the test to end after the task has completed
+        result.get()
+
     def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
         self.assertListEqual([], TaskService.get_all_tasks())
 
     def test_get_all_tasks_should_include_scheduled_tasks(self):
-        ret = hello_world.apply_async(countdown=5)
-        active_tasks = TaskService.get_all_tasks()
-        self.assertEquals(1, active_tasks.__len__())
-        #This effectively forces the test to end after the task has completed
-        ret.get()
+        result = hello_world.apply_async(countdown=5)
+        tasks = TaskService.get_all_tasks()
+        self.assertEquals(1, len(tasks))
+        task = tasks[0]
+        self.assertEquals(result.id, task.get('request').get('id'))
+        self.assertEquals('PENDING', result.state)
+        self.assertIsNotNone(task.get('eta'))
+        result.get()
 
 
 class ImportManagerTest(TestCase):
