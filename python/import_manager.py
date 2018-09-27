@@ -11,7 +11,7 @@ otherwise error details in case of a failure.
 import os
 import sys
 
-from celery import Celery
+from celery import Celery, Task
 
 ENV_BROKER_URL = 'broker_url'
 TASK_ID_KEY = 'id'
@@ -24,6 +24,12 @@ TASK_ID_SEPARATOR = '-'
 """
 ERROR_IMPORT_IN_PROGRESS = 3
 ERROR_INVALID = 4
+
+
+class ImportTask(Task):
+
+    def run(self, csv, country_code, period):
+        print 'Running task'
 
 
 def get_celery():
@@ -46,7 +52,11 @@ def import_csv(csv, country_code, period):
     if has_existing_import(country_code):
         sys.exit(ERROR_IMPORT_IN_PROGRESS)
 
+    return import_csv_async(csv, country_code, period)
 
+
+def import_csv_async(csv, country_code, period):
+    return Task().apply_async(task_id='my-id', args=[csv, country_code, period])
 
 
 def has_existing_import(country_code):
@@ -58,7 +68,6 @@ def has_existing_import(country_code):
     Returns:
           const:`True` if the country has an existing import request otherwise const:`False`
     """
-
     country_task = None
     for task in get_all_tasks():
         if task.get(TASK_ID_KEY).startswith(country_code):

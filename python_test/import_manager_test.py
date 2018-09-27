@@ -4,9 +4,10 @@ import time
 import subprocess
 
 from unittest import TestCase
-from mock import patch
+from mock import patch, Mock, MagicMock
 from celery import Celery
 from python import import_manager
+from python.import_manager import ImportTask
 from python.import_manager import ENV_BROKER_URL, TASK_ID_KEY, TASK_ID_SEPARATOR, ERROR_IMPORT_IN_PROGRESS
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -37,7 +38,7 @@ def wait_task(duration):
     time.sleep(duration)
 
 
-class TaskTest(TestCase):
+class ImportManagerTaskTest(TestCase):
 
     redis_process = None
     hostname = 'test'
@@ -95,7 +96,7 @@ class TaskTest(TestCase):
         print '\nStopping celery worker'
         celery.control.broadcast('shutdown')
 
-    """ ===================== Actual TaskService Tests ===================== """
+    """ ================== Actual Import Manager Task related tests ================== """
 
     def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
         self.assertListEqual([], import_manager.get_all_tasks())
@@ -119,7 +120,8 @@ class TaskTest(TestCase):
         self.assertEquals(result.id, task.get('request').get(TASK_ID_KEY))
         self.assertIsNotNone(task.get('eta'))
 
-    # TODO include tests that ensures reserved (recieved and not scheduled but waiting for execution)
+    # TODO include a test that ensures reserved tasks are returned
+    # i.e received and not scheduled but waiting for execution
 
 
 class ImportManagerTest(TestCase):
@@ -141,4 +143,14 @@ class ImportManagerTest(TestCase):
         has_existing_import.return_value = True
         with self.assertRaises(SystemExit) as cm:
             import_manager.import_csv('some_file.csv', country_code, 'some-period')
+        has_existing_import.assert_called_once_with(country_code)
         self.assertEquals(ERROR_IMPORT_IN_PROGRESS, cm.exception.code)
+
+    def test_import_csv_should_process_the_import(self):
+        country_code = 'UG'
+        csv_file = 'some_file.csv'
+        period = 'some-period'
+        import_manager.has_existing_import = Mock(return_value=False)
+        import_manager.import_csv_async = Mock(return_value=None)
+        import_manager.import_csv(csv_file, country_code, period)
+        import_manager.import_csv_async.assert_called_once_with(csv_file, country_code, period)
