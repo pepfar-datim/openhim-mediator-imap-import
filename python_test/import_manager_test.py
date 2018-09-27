@@ -1,13 +1,13 @@
 import os
-import subprocess
 import sys
 import time
+import subprocess
 
 from unittest import TestCase
 from mock import patch
 from celery import Celery
 from python import import_manager
-from python.import_manager import ENV_BROKER_URL, TASK_ID_KEY, TASK_ID_SEPARATOR
+from python.import_manager import ENV_BROKER_URL, TASK_ID_KEY, TASK_ID_SEPARATOR, ERROR_IMPORT_IN_PROGRESS
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 redis_base_dir = dir_path+'/redis'
@@ -134,3 +134,11 @@ class ImportManagerTest(TestCase):
         country_code = 'UG'
         get_all_tasks.return_value = [{TASK_ID_KEY: country_code+TASK_ID_SEPARATOR+'some-uuid'}]
         self.assertTrue(import_manager.has_existing_import(country_code))
+
+    @patch('python.import_manager.has_existing_import')
+    def test_import_csv_should_fail_if_the_country_has_an_import_in_progress(self, has_existing_import):
+        country_code = 'UG'
+        has_existing_import.return_value = True
+        with self.assertRaises(SystemExit) as cm:
+            import_manager.import_csv('some_file.csv', country_code, 'some-period')
+        self.assertEquals(ERROR_IMPORT_IN_PROGRESS, cm.exception.code)

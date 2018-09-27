@@ -1,4 +1,16 @@
+"""
+This manager is responsible for mediating the import process of a csv file by ensuring that if a
+given country submits an import, it gets blocked from making subsequent submissions until the
+current import is complete.
+
+It's also responsible for responding to the status requests of a country's import by a specified
+task id. If the import is complete, it should include the results in the response in case of a success
+otherwise error details in case of a failure.
+"""
+
 import os
+import sys
+
 from celery import Celery
 
 ENV_BROKER_URL = 'broker_url'
@@ -6,9 +18,35 @@ TASK_ID_KEY = 'id'
 TASK_ID_SEPARATOR = '-'
 
 
+# TODO Use an enum for exit codes, client code should interprete 0 as normal termination
+"""
+0, 1, 2 are reserved based on conventions where 0 is success, 1 errors in the script, 2 worng command usage
+"""
+ERROR_IMPORT_IN_PROGRESS = 3
+ERROR_INVALID = 4
+
+
 def get_celery():
     broker_url = os.getenv(ENV_BROKER_URL)
     return Celery('tasks', broker=broker_url, backend=ENV_BROKER_URL)
+
+
+def import_csv(csv, country_code, period):
+    """ Imports a csv file asynchronously, will ony process the import if the country has no
+     existing import
+
+        Arguments:
+            csv (str): The csv file to import
+            country_code (str): Country code of the country
+            period (str): The period of the year the import is assigned to
+
+        Returns:
+              None
+        """
+    if has_existing_import(country_code):
+        sys.exit(ERROR_IMPORT_IN_PROGRESS)
+
+
 
 
 def has_existing_import(country_code):
