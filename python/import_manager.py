@@ -10,38 +10,44 @@ otherwise error details in case of a failure.
 
 import os
 import sys
+import subprocess
 
-from celery import Celery, Task
+from celery import Celery
 
+ENV_CELERY_CONFIG = 'celery_config'
 ENV_BROKER_URL = 'broker_url'
+ENC_IMPORT_SCRIPT_FILENAME = 'import_script_filename'
+
 TASK_ID_KEY = 'id'
 TASK_ID_SEPARATOR = '-'
-
-
 # TODO Use an enum for exit codes, client code should interprete 0 as normal termination
 """
-0, 1, 2 are reserved based on conventions where 0 is success, 1 errors in the script, 2 worng command usage
+0, 1, 2 are reserved based on conventions where 0 is success, 
+1 is errors in the script, 2 wrong command usage
 """
 ERROR_IMPORT_IN_PROGRESS = 3
 ERROR_INVALID = 4
 
+celery = Celery('import_task')
+celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.celeryconfig'))
 
-class ImportTask(Task):
-
-    def run(self, csv, country_code, period):
-        print 'Running task'
-
+@celery.task
+def import_task(script_filename, csv, country_code, period):
+    # Calls the specified python import script with along with the rest of the args
+    cmd = ['python', script_filename]
+    return subprocess.check_output(cmd)
 
 def get_celery():
     broker_url = os.getenv(ENV_BROKER_URL)
-    return Celery('tasks', broker=broker_url, backend=ENV_BROKER_URL)
+    return Celery('tasks', broker=broker_url, backend=broker_url)
 
 
-def import_csv(csv, country_code, period):
+def import_csv(script_filename, csv, country_code, period):
     """ Imports a csv file asynchronously, will ony process the import if the country has no
      existing import
 
         Arguments:
+            script_filename (str): The name of the python import script
             csv (str): The csv file to import
             country_code (str): Country code of the country
             period (str): The period of the year the import is assigned to
@@ -52,11 +58,12 @@ def import_csv(csv, country_code, period):
     if has_existing_import(country_code):
         sys.exit(ERROR_IMPORT_IN_PROGRESS)
 
-    return import_csv_async(csv, country_code, period)
+    return import_csv_async(script_filename, csv, country_code, period)
 
 
-def import_csv_async(csv, country_code, period):
-    return Task().apply_async(task_id='my-id', args=[csv, country_code, period])
+def import_csv_async(script_filename, csv, country_code, period):
+    # Runs the import asynchronously
+    import_task.apply_async(task_id=country_code, args=[script_filename, csv, country_code, period])
 
 
 def has_existing_import(country_code):
