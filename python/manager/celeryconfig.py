@@ -1,4 +1,3 @@
-redis_port = 6379
-broker_url = 'redis://localhost:'+redis_port.__str__()+'/'
+broker_url = 'redis://localhost'
 result_backend = 'redis'
 task_track_started = True
