@@ -164,4 +164,4 @@ class ImportManagerTest(TestCase):
         with self.assertRaises(SystemExit) as cm:
             import_manager.import_csv('import_file.py', 'some_file.csv', country_code, 'some-period')
         has_existing_import.assert_called_once_with(country_code)
-        self.assertEquals(ERROR_IMPORT_IN_PROGRESS, cm.exception.code)
+        self.assertEquals(EXIT_CODE_IMPORT_IN_PROGRESS, cm.exception.code)

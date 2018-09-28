@@ -57,7 +57,7 @@ def import_csv(script_filename, csv, country_code, period):
               None
         """
     if has_existing_import(country_code):
-        sys.exit(ERROR_IMPORT_IN_PROGRESS)
+        sys.exit(EXIT_CODE_IMPORT_IN_PROGRESS)
 
     task_id = country_code + TASK_ID_SEPARATOR + uuid.uuid4().__str__()
     script_args=[script_filename, csv, country_code, period]
