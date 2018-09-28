@@ -37,7 +37,7 @@ class ImportStatus:
 
 
 @celery.task(name='import_task')
-def import_task(script_filename, csv, country_code, period):
+def __import_task(script_filename, csv, country_code, period):
     # Calls the specified python import script with along with the rest of the args
     return subprocess.check_output(['python', script_filename, csv, country_code, period])
 
@@ -61,7 +61,7 @@ def import_csv(script_filename, csv, country_code, period):
     task_id = country_code + TASK_ID_SEPARATOR + uuid.uuid4().__str__()
     script_args = [script_filename, csv, country_code, period]
 
-    import_task.apply_async(task_track_started=True, task_id=task_id, args=script_args)
+    __import_task.apply_async(task_track_started=True, task_id=task_id, args=script_args)
 
     return task_id
 
