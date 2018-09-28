@@ -122,13 +122,13 @@ class ImportManagerTaskTest(TestCase):
         self.assertEquals(result.id, task.get('request').get(TASK_ID_KEY))
         self.assertIsNotNone(task.get('eta'))
 
-    def test_import_csv_async_should_run_the_import_asynchronously(self):
+    def test_import_csv_should_run_the_import_asynchronously(self):
         country_code = 'UG'
         script = 'test_import_script.py'
         package = 'python_test'
         if os.getcwd().__contains__(package) is False:
             script = os.path.join(package, script)
-        task_id = import_manager.import_csv_async(script, 'file.csv', country_code, 'FY18')
+        task_id = import_manager.import_csv(script, 'file.csv', country_code, 'FY18')
         self.assertTrue(task_id.startswith(country_code))
         time.sleep(1)
         result = import_manager.get_task_results(task_id)
@@ -161,15 +161,3 @@ class ImportManagerTest(TestCase):
             import_manager.import_csv('import_file.py', 'some_file.csv', country_code, 'some-period')
         has_existing_import.assert_called_once_with(country_code)
         self.assertEquals(ERROR_IMPORT_IN_PROGRESS, cm.exception.code)
-
-    def test_import_csv_should_process_the_import(self):
-        import_file = 'import_file.py'
-        country_code = 'UG'
-        expected_task_id = country_code+TASK_ID_SEPARATOR+'uuid'
-        csv_file = 'some_file.csv'
-        period = 'some-period'
-        import_manager.has_existing_import = Mock(return_value=False)
-        import_manager.import_csv_async = Mock(return_value=expected_task_id)
-        task_id = import_manager.import_csv(import_file, csv_file, country_code, period)
-        self.assertTrue(task_id.startswith(country_code))
-        import_manager.import_csv_async.assert_called_once_with(import_file, csv_file, country_code, period)

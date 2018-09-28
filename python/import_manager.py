@@ -64,13 +64,10 @@ def import_csv(script_filename, csv, country_code, period):
     if has_existing_import(country_code):
         sys.exit(ERROR_IMPORT_IN_PROGRESS)
 
-    return import_csv_async(script_filename, csv, country_code, period)
+    task_id = country_code + TASK_ID_SEPARATOR + uuid.uuid4().__str__()
+    script_args=[script_filename, csv, country_code, period]
+    import_task.apply_async(task_track_started=True, task_id=task_id, args=script_args)
 
-
-def import_csv_async(script_filename, csv, country_code, period):
-    # Runs the import asynchronously
-    task_id = country_code+TASK_ID_SEPARATOR+uuid.uuid4().__str__()
-    import_task.apply_async(task_track_started=True, task_id=task_id, args=[script_filename, csv, country_code, period])
     return task_id
 
 
