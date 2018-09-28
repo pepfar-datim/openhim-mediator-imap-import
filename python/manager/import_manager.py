@@ -30,11 +30,11 @@ class ImportStatus:
     # Encapsulates information about the status and results of an import
     """
     status = None
-    results = None
+    result = None
 
-    def __init__(self, status=None, results=None):
+    def __init__(self, status=None, result=None):
         self.status = status
-        self.results = results
+        self.result = result
 
 
 @__celery.task(name='import_task')
@@ -106,9 +106,10 @@ def get_all_tasks():
     return unique_tasks
 
 
-def get_task_status(task_id):
-    return __celery.control.inspect().query_task(task_id)
+def get_import_status(task_id):
+    async_result = __celery.AsyncResult(task_id)
+    result = None
+    if async_result.ready():
+        result = async_result.result
 
-
-def get_task_results(task_id):
-    return __celery.AsyncResult(task_id)
+    return ImportStatus(async_result.state, result)

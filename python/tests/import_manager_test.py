@@ -136,9 +136,30 @@ class ImportManagerTaskTest(TestCase):
         task_id = import_manager.import_csv(script, 'file.csv', country_code, 'FY18')
         self.assertTrue(task_id.startswith(country_code))
         time.sleep(1)
-        result = import_manager.get_task_results(task_id)
-        self.assertEquals(states.SUCCESS, result.state)
-        self.assertEquals(EXPECTED_RESULT+'\n', result.result)
+        import_status = import_manager.get_import_status(task_id)
+        self.assertEquals(states.SUCCESS, import_status.status)
+        self.assertEquals(EXPECTED_RESULT+'\n', import_status.result)
+
+    def test_get_import_status_should_get_the_status_of_an_incomplete_task(self):
+        task_id = 'ug'
+        result = wait_task.apply_async(task_id=task_id, args=[5])
+        time.sleep(1)
+        import_status = import_manager.get_import_status(task_id)
+        result.get()
+        self.assertEquals(states.STARTED, import_status.status)
+        self.assertIsNone(import_status.result)
+
+    def test_get_import_status_should_get_the_status_and_results_of_a_completed_task(self):
+        country_code = 'UG'
+        script = 'test_import_script.py'
+        if os.getcwd().endswith(package) is False:
+            script = os.path.join(project, package, script)
+        task_id = import_manager.import_csv(script, 'file.csv', country_code, 'FY18')
+        self.assertTrue(task_id.startswith(country_code))
+        time.sleep(1)
+        import_status = import_manager.get_import_status(task_id)
+        self.assertEquals(states.SUCCESS, import_status.status)
+        self.assertEquals(EXPECTED_RESULT+'\n', import_status.result)
 
     # TODO include a test that ensures reserved tasks are returned
     # i.e received and not scheduled but waiting for execution
