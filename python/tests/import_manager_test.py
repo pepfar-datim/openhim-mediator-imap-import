@@ -4,7 +4,7 @@ import time
 import subprocess
 
 from unittest import TestCase
-from mock import patch, Mock
+from mock import patch
 from celery import Celery, states
 from python import import_manager
 from python.import_manager import ENV_BROKER_URL, TASK_ID_KEY, TASK_ID_SEPARATOR, ERROR_IMPORT_IN_PROGRESS
@@ -17,6 +17,7 @@ broker_url = 'redis://localhost:'+redis_port+'/'
 os.environ[ENV_BROKER_URL] = broker_url
 celery = Celery('import_manager_test', broker=broker_url, backend=broker_url)
 
+
 def setUpModule():
     print '\nRunning tests for Python scripts'
     print '======================================================================'
@@ -27,11 +28,12 @@ def tearDownModule():
     print '======================================================================'
 
 
-@celery.task
+@celery.task(name='hello_world')
 def hello_world():
     return 'Hello World!'
 
-@celery.task
+
+@celery.task(name='wait_task')
 def wait_task(duration):
     print 'Running for '+duration.__str__()+'s'
     time.sleep(duration)
@@ -73,12 +75,8 @@ class ImportManagerTaskTest(TestCase):
     @classmethod
     def start_worker(cls):
         print('Starting celery worker...')
-        # We need to be able to run this with npm test or as a single Test in the IDE
-        module = '.import_manager_test'
-        package = 'python_test'
-        if os.getcwd().__contains__(package) is False:
-            module = package+module
-        cmd = 'celery worker -A '+module+' -l info -b ' + broker_url + ' -n '+cls.hostname
+        app_module = 'python.tests.import_manager_test'
+        cmd = 'celery worker -A '+app_module+' -l info -b ' + broker_url + ' -n '+cls.hostname
         worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         print 'Celery worker pid: ' + worker_process.pid.__str__()
 
@@ -125,9 +123,10 @@ class ImportManagerTaskTest(TestCase):
     def test_import_csv_should_run_the_import_asynchronously(self):
         country_code = 'UG'
         script = 'test_import_script.py'
-        package = 'python_test'
-        if os.getcwd().__contains__(package) is False:
-            script = os.path.join(package, script)
+        tests_dir = 'tests'
+        # We need to be able to run this with npm test or as a single Test in the IDE
+        if os.getcwd().endswith('tests') is False:
+            script = os.path.join('python', tests_dir, script)
         task_id = import_manager.import_csv(script, 'file.csv', country_code, 'FY18')
         self.assertTrue(task_id.startswith(country_code))
         time.sleep(1)

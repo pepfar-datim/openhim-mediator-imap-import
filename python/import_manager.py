@@ -37,7 +37,8 @@ ERROR_INVALID = 4
 celery = Celery('import_task')
 celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.celeryconfig'))
 
-@celery.task
+
+@celery.task(name='import_task')
 def import_task(script_filename, csv, country_code, period):
     # Calls the specified python import script with along with the rest of the args
     cmd = ['python', script_filename]
@@ -90,9 +91,8 @@ def has_existing_import(country_code):
 
 
 def get_all_tasks():
-    celery = get_celery()
     all_tasks = []
-    inspect = celery.control.inspect()
+    inspect = get_celery().control.inspect()
     for tasks1 in inspect.reserved().values():
         all_tasks.extend(tasks1)
     for tasks2 in inspect.scheduled().values():
