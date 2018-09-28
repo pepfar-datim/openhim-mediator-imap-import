@@ -6,16 +6,21 @@ import subprocess
 from unittest import TestCase
 from mock import patch
 from celery import Celery, states
+from python.manager.constants import ENV_CELERY_CONFIG
+
+# We need to have this here before the manager imports so that the env variable
+# is available when reference in the manager
+celery_config = 'python.tests.celeryconfig'
+os.environ[ENV_CELERY_CONFIG] = celery_config
+
 from python.manager import import_manager
-from python.manager.import_manager import ENV_BROKER_URL, TASK_ID_KEY, TASK_ID_SEPARATOR, ERROR_IMPORT_IN_PROGRESS
+from python.manager.constants import *
 from test_import_script import EXPECTED_MSG
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 redis_base_dir = dir_path+'/redis'
-redis_port = '6381'
-broker_url = 'redis://localhost:'+redis_port+'/'
-os.environ[ENV_BROKER_URL] = broker_url
-celery = Celery('test_tasks', broker=broker_url, backend=broker_url)
+celery = Celery('test_tasks')
+celery.config_from_object(celery_config)
 
 
 def setUpModule():
@@ -76,7 +81,7 @@ class ImportManagerTaskTest(TestCase):
     def start_worker(cls):
         print('Starting celery worker...')
         app_module = 'python.tests.import_manager_test'
-        cmd = 'celery worker -A '+app_module+' -l info -b ' + broker_url + ' -n '+cls.hostname
+        cmd = 'celery worker -A '+app_module+' -l info -b ' + celery.conf.broker_url + ' -n '+cls.hostname
         worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         print 'Celery worker pid: ' + worker_process.pid.__str__()
 

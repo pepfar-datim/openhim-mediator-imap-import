@@ -19,23 +19,11 @@ import uuid
 import subprocess
 
 from celery import Celery
-
-ENV_CELERY_CONFIG = 'celery_config'
-ENV_BROKER_URL = 'broker_url'
-ENC_IMPORT_SCRIPT_FILENAME = 'import_script_filename'
-
-TASK_ID_KEY = 'id'
-TASK_ID_SEPARATOR = '-'
-# TODO Use an enum for exit codes, client code should interprete 0 as normal termination
-"""
-0, 1, 2 are reserved based on conventions where 0 is success, 
-1 is errors in the script, 2 wrong command usage
-"""
-ERROR_IMPORT_IN_PROGRESS = 3
-ERROR_INVALID = 4
+from python.manager.constants import *
 
 celery = Celery('import_task')
 celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.manager.celeryconfig'))
+print celery.conf.redis_port
 
 
 @celery.task(name='import_task')
@@ -43,10 +31,6 @@ def import_task(script_filename, csv, country_code, period):
     # Calls the specified python import script with along with the rest of the args
     cmd = ['python', script_filename]
     return subprocess.check_output(cmd)
-
-def get_celery():
-    broker_url = os.getenv(ENV_BROKER_URL)
-    return Celery('tasks', broker=broker_url, backend=broker_url)
 
 
 def import_csv(script_filename, csv, country_code, period):
@@ -92,7 +76,7 @@ def has_existing_import(country_code):
 
 def get_all_tasks():
     all_tasks = []
-    inspect = get_celery().control.inspect()
+    inspect = celery.control.inspect()
     for tasks1 in inspect.reserved().values():
         all_tasks.extend(tasks1)
     for tasks2 in inspect.scheduled().values():
@@ -112,7 +96,7 @@ def get_all_tasks():
 
 
 def get_task_status(task_id):
-    return get_celery().control.inspect().query_task(task_id)
+    return celery.control.inspect().query_task(task_id)
 
 
 def get_task_results(task_id):
