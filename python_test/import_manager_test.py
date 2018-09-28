@@ -5,7 +5,7 @@ import subprocess
 
 from unittest import TestCase
 from mock import patch, Mock
-from celery import Celery
+from celery import Celery, states
 from python import import_manager
 from python.import_manager import ENV_BROKER_URL, TASK_ID_KEY, TASK_ID_SEPARATOR, ERROR_IMPORT_IN_PROGRESS
 from test_import_script import EXPECTED_MSG
@@ -123,9 +123,18 @@ class ImportManagerTaskTest(TestCase):
         self.assertIsNotNone(task.get('eta'))
 
     def test_import_csv_async_should_run_the_import_asynchronously(self):
-        import_manager.import_csv_async('./test_import_script.py', 'file.csv', 'UG', 'FY18')
+        country_code = 'UG'
+        script = 'test_import_script.py'
+        package = 'python_test'
+        if os.getcwd().__contains__(package) is False:
+            script = os.path.join(package, script)
+        task_id = import_manager.import_csv_async(script, 'file.csv', country_code, 'FY18')
+        self.assertTrue(task_id.startswith(country_code))
         time.sleep(1)
-        #EXPECTED_MSG
+        result = import_manager.get_task_results(task_id)
+        print result.result
+        self.assertEquals(states.SUCCESS, result.state)
+        self.assertEquals(EXPECTED_MSG+'\n', result.result)
 
     # TODO include a test that ensures reserved tasks are returned
     # i.e received and not scheduled but waiting for execution
@@ -156,9 +165,11 @@ class ImportManagerTest(TestCase):
     def test_import_csv_should_process_the_import(self):
         import_file = 'import_file.py'
         country_code = 'UG'
+        expected_task_id = country_code+TASK_ID_SEPARATOR+'uuid'
         csv_file = 'some_file.csv'
         period = 'some-period'
         import_manager.has_existing_import = Mock(return_value=False)
-        import_manager.import_csv_async = Mock(return_value=None)
-        import_manager.import_csv(import_file, csv_file, country_code, period)
+        import_manager.import_csv_async = Mock(return_value=expected_task_id)
+        task_id = import_manager.import_csv(import_file, csv_file, country_code, period)
+        self.assertTrue(task_id.startswith(country_code))
         import_manager.import_csv_async.assert_called_once_with(import_file, csv_file, country_code, period)

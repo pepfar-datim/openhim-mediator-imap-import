@@ -6,10 +6,16 @@ current import is complete.
 It's also responsible for responding to the status requests of a country's import by a specified
 task id. If the import is complete, it should include the results in the response in case of a success
 otherwise error details in case of a failure.
+
+To run an import using this manager client code should call the method below,
+
+import_csv(script_filename, csv, country_code, period)
+
 """
 
 import os
 import sys
+import uuid
 import subprocess
 
 from celery import Celery
@@ -63,7 +69,9 @@ def import_csv(script_filename, csv, country_code, period):
 
 def import_csv_async(script_filename, csv, country_code, period):
     # Runs the import asynchronously
-    import_task.apply_async(task_id=country_code, args=[script_filename, csv, country_code, period])
+    task_id = country_code+TASK_ID_SEPARATOR+uuid.uuid4().__str__()
+    import_task.apply_async(task_track_started=True, task_id=task_id, args=[script_filename, csv, country_code, period])
+    return task_id
 
 
 def has_existing_import(country_code):
@@ -108,3 +116,7 @@ def get_all_tasks():
 
 def get_task_status(task_id):
     return get_celery().control.inspect().query_task(task_id)
+
+
+def get_task_results(task_id):
+    return celery.AsyncResult(task_id)
