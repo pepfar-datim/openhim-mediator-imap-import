@@ -21,13 +21,14 @@ import subprocess
 from celery import Celery
 from python.manager.constants import *
 
-celery = Celery('import_task')
-celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.manager.celeryconfig'))
+__celery = Celery('import_task')
+__celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.manager.celeryconfig'))
 
-"""
-Encapsulates information about the status and results of an import
-"""
+
 class ImportStatus:
+    """
+    # Encapsulates information about the status and results of an import
+    """
     status = None
     results = None
 
@@ -36,7 +37,7 @@ class ImportStatus:
         self.results = results
 
 
-@celery.task(name='import_task')
+@__celery.task(name='import_task')
 def __import_task(script_filename, csv, country_code, period):
     # Calls the specified python import script with along with the rest of the args
     return subprocess.check_output(['python', script_filename, csv, country_code, period])
@@ -86,7 +87,7 @@ def has_existing_import(country_code):
 
 def get_all_tasks():
     all_tasks = []
-    inspect = celery.control.inspect()
+    inspect = __celery.control.inspect()
     for tasks1 in inspect.reserved().values():
         all_tasks.extend(tasks1)
     for tasks2 in inspect.scheduled().values():
@@ -106,8 +107,8 @@ def get_all_tasks():
 
 
 def get_task_status(task_id):
-    return celery.control.inspect().query_task(task_id)
+    return __celery.control.inspect().query_task(task_id)
 
 
 def get_task_results(task_id):
-    return celery.AsyncResult(task_id)
+    return __celery.AsyncResult(task_id)

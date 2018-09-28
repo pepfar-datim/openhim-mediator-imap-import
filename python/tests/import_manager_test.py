@@ -144,10 +144,10 @@ class ImportManagerTaskTest(TestCase):
     # i.e received and not scheduled but waiting for execution
 
 
-"""
-Contains unit tests specific to logic in the import_manager module
-"""
 class ImportManagerTest(TestCase):
+    """
+    Contains unit tests specific to logic in the import_manager module
+    """
 
     @patch(project+'.manager.import_manager.get_all_tasks')
     def test_has_existing_import_should_return_false_if_there_no_import_task_for_the_country(self, get_all_tasks):
