@@ -35,7 +35,7 @@ ERROR_IMPORT_IN_PROGRESS = 3
 ERROR_INVALID = 4
 
 celery = Celery('import_task')
-celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.celeryconfig'))
+celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.manager.celeryconfig'))
 
 
 @celery.task(name='import_task')
