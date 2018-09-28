@@ -3,7 +3,12 @@ ENV_CELERY_CONFIG = 'celery_config'
 TASK_ID_KEY = 'id'
 TASK_ID_SEPARATOR = '-'
 
-# TODO Use an enum for exit codes, client code should interprete 0 as normal termination
+RESPONSE_FIELD_ID = 'id'
+RESPONSE_FIELD_STATUS = 'status'
+RESPONSE_FIELD_RESULT = 'result'
+
+
+# TODO Use an enum for exit codes
 """
 0, 1, 2 are reserved based on conventions where 0 is success, 
 1 is errors in the script, 2 wrong command usage

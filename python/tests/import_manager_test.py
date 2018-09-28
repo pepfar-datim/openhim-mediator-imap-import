@@ -171,7 +171,7 @@ class ImportManagerTest(TestCase):
     """
 
     @patch(project+'.manager.import_manager.get_all_tasks')
-    def test_has_existing_import_should_return_false_if_there_no_import_task_for_the_country(self, get_all_tasks):
+    def test_has_existing_import_should_return_false_if_there_are_no_import_task_for_the_country(self, get_all_tasks):
         get_all_tasks.return_value = [{TASK_ID_KEY: 'KE'+TASK_ID_SEPARATOR+'some-uuid'}]
         self.assertFalse(import_manager.has_existing_import('UG'))
 

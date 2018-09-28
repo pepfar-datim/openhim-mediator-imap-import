@@ -7,9 +7,8 @@ It's also responsible for responding to the status requests of a country's impor
 task id. If the import is complete, it should include the results in the response in case of a success
 otherwise error details in case of a failure.
 
-To run an import using this manager, the client code should call the method below,
-
-import_csv(script_filename, csv, country_code, period)
+Client code shouldn't directly call methods on this manager, instead they should call
+functions in the import_util module
 
 """
 
@@ -19,7 +18,7 @@ import uuid
 import subprocess
 
 from celery import Celery
-from python.manager.constants import *
+from constants import *
 
 __celery = Celery('import_task')
 __celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.manager.celeryconfig'))
