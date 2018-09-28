@@ -7,17 +7,13 @@ from constants import RESPONSE_FIELD_ID, RESPONSE_FIELD_STATUS, RESPONSE_FIELD_R
 from import_manager import import_csv, get_import_status
 
 
-def to_json(response):
-    return json.dump(response)
-
-
 def import_csv(script_filename, csv, country_code, period):
     task_id = import_csv(script_filename, csv, country_code, period)
     response = {
         RESPONSE_FIELD_ID: task_id
     }
 
-    print to_json(response)
+    print json.dump(response)
 
 
 def get_import_status(import_id):
@@ -27,5 +23,5 @@ def get_import_status(import_id):
         RESPONSE_FIELD_RESULT: import_status.result
     }
 
-    print to_json(response)
+    print json.dump(response)
 
