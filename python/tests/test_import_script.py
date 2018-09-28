@@ -2,11 +2,11 @@
 Simple script for test purposes
 """
 
-EXPECTED_MSG = 'testing_script'
+EXPECTED_RESULT = 'testing_script'
 
 
 def hello_world():
-    print EXPECTED_MSG
+    print EXPECTED_RESULT
 
 
 if __name__ == '__main__':

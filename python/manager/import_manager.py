@@ -23,7 +23,17 @@ from python.manager.constants import *
 
 celery = Celery('import_task')
 celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.manager.celeryconfig'))
-print celery.conf.redis_port
+
+
+class ImportStatus:
+
+    status = None
+
+    results = None
+
+    def __init__(self, status=None, results=None):
+        self.status = status
+        self.results = results
 
 
 @celery.task(name='import_task')

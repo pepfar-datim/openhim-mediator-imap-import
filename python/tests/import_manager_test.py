@@ -10,12 +10,14 @@ from python.manager.constants import ENV_CELERY_CONFIG
 
 # We need to have this here before the manager imports so that the env variable
 # is available when reference in the manager
-celery_config = 'python.tests.celeryconfig'
+package = 'tests'
+project = 'python'
+celery_config = project+'.'+package+'.celeryconfig'
 os.environ[ENV_CELERY_CONFIG] = celery_config
 
 from python.manager import import_manager
 from python.manager.constants import *
-from test_import_script import EXPECTED_MSG
+from test_import_script import EXPECTED_RESULT
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 redis_base_dir = dir_path+'/redis'
@@ -80,7 +82,7 @@ class ImportManagerTaskTest(TestCase):
     @classmethod
     def start_worker(cls):
         print('Starting celery worker...')
-        app_module = 'python.tests.import_manager_test'
+        app_module = project+'.'+package+'.import_manager_test'
         cmd = 'celery worker -A '+app_module+' -l info -b ' + celery.conf.broker_url + ' -n '+cls.hostname
         worker_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         print 'Celery worker pid: ' + worker_process.pid.__str__()
@@ -128,17 +130,15 @@ class ImportManagerTaskTest(TestCase):
     def test_import_csv_should_run_the_import_asynchronously(self):
         country_code = 'UG'
         script = 'test_import_script.py'
-        tests_dir = 'tests'
         # We need to be able to run this with npm test or as a single Test in the IDE
-        if os.getcwd().endswith('tests') is False:
-            script = os.path.join('python', tests_dir, script)
+        if os.getcwd().endswith(package) is False:
+            script = os.path.join(project, package, script)
         task_id = import_manager.import_csv(script, 'file.csv', country_code, 'FY18')
         self.assertTrue(task_id.startswith(country_code))
         time.sleep(1)
         result = import_manager.get_task_results(task_id)
-        print result.result
         self.assertEquals(states.SUCCESS, result.state)
-        self.assertEquals(EXPECTED_MSG+'\n', result.result)
+        self.assertEquals(EXPECTED_RESULT+'\n', result.result)
 
     # TODO include a test that ensures reserved tasks are returned
     # i.e received and not scheduled but waiting for execution
@@ -146,18 +146,18 @@ class ImportManagerTaskTest(TestCase):
 
 class ImportManagerTest(TestCase):
 
-    @patch('python.manager.import_manager.get_all_tasks')
+    @patch(project+'.manager.import_manager.get_all_tasks')
     def test_has_existing_import_should_return_false_if_there_no_import_task_for_the_country(self, get_all_tasks):
         get_all_tasks.return_value = [{TASK_ID_KEY: 'KE'+TASK_ID_SEPARATOR+'some-uuid'}]
         self.assertFalse(import_manager.has_existing_import('UG'))
 
-    @patch('python.manager.import_manager.get_all_tasks')
+    @patch(project+'.manager.import_manager.get_all_tasks')
     def test_has_existing_import_should_return_True_if_there_an_import_task_for_the_country(self, get_all_tasks):
         country_code = 'UG'
         get_all_tasks.return_value = [{TASK_ID_KEY: country_code+TASK_ID_SEPARATOR+'some-uuid'}]
         self.assertTrue(import_manager.has_existing_import(country_code))
 
-    @patch('python.manager.import_manager.has_existing_import')
+    @patch(project+'.manager.import_manager.has_existing_import')
     def test_import_csv_should_fail_if_the_country_has_an_import_in_progress(self, has_existing_import):
         country_code = 'UG'
         has_existing_import.return_value = True
