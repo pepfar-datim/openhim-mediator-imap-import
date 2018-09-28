@@ -103,7 +103,7 @@ class ImportManagerTaskTest(TestCase):
         print '\nStopping celery worker'
         celery.control.broadcast('shutdown')
 
-    """ ================== Actual Import Manager Task related tests ================== """
+    """ ================== Import Manager Task related tests ================== """
 
     def test_get_active_tasks_should_return_nothing_if_no_active_tasks(self):
         self.assertListEqual([], import_manager.get_all_tasks())
@@ -144,6 +144,9 @@ class ImportManagerTaskTest(TestCase):
     # i.e received and not scheduled but waiting for execution
 
 
+"""
+Contains unit tests specific to logic in the import_manager module
+"""
 class ImportManagerTest(TestCase):
 
     @patch(project+'.manager.import_manager.get_all_tasks')

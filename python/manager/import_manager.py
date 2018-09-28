@@ -7,7 +7,7 @@ It's also responsible for responding to the status requests of a country's impor
 task id. If the import is complete, it should include the results in the response in case of a success
 otherwise error details in case of a failure.
 
-To run an import using this manager client code should call the method below,
+To run an import using this manager, the client code should call the method below,
 
 import_csv(script_filename, csv, country_code, period)
 
@@ -24,11 +24,11 @@ from python.manager.constants import *
 celery = Celery('import_task')
 celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.manager.celeryconfig'))
 
-
+"""
+Encapsulates information about the status and results of an import
+"""
 class ImportStatus:
-
     status = None
-
     results = None
 
     def __init__(self, status=None, results=None):
@@ -39,8 +39,7 @@ class ImportStatus:
 @celery.task(name='import_task')
 def import_task(script_filename, csv, country_code, period):
     # Calls the specified python import script with along with the rest of the args
-    cmd = ['python', script_filename]
-    return subprocess.check_output(cmd)
+    return subprocess.check_output(['python', script_filename, csv, country_code, period])
 
 
 def import_csv(script_filename, csv, country_code, period):
@@ -60,7 +59,8 @@ def import_csv(script_filename, csv, country_code, period):
         sys.exit(EXIT_CODE_IMPORT_IN_PROGRESS)
 
     task_id = country_code + TASK_ID_SEPARATOR + uuid.uuid4().__str__()
-    script_args=[script_filename, csv, country_code, period]
+    script_args = [script_filename, csv, country_code, period]
+
     import_task.apply_async(task_track_started=True, task_id=task_id, args=script_args)
 
     return task_id
