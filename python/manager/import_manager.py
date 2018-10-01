@@ -15,6 +15,7 @@ functions in the import_util module
 import os
 import sys
 import uuid
+from threading import Lock
 import subprocess
 
 from celery import Celery
@@ -22,6 +23,8 @@ from constants import *
 
 __celery = Celery('import_task')
 __celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.manager.celeryconfig'))
+
+lock = Lock()
 
 
 class ImportStatus:
@@ -38,7 +41,7 @@ class ImportStatus:
 
 @__celery.task(name='import_task')
 def __import_task(script_filename, csv, country_code, period):
-    # Calls the specified python import script with along with the rest of the args
+    # Calls the specified python import script along with the rest of the args
     return subprocess.check_output(['python', script_filename, csv, country_code, period])
 
 
@@ -54,16 +57,17 @@ def import_csv(script_filename, csv, country_code, period):
 
         Returns:
               None
-        """
-    if has_existing_import(country_code):
-        sys.exit(EXIT_CODE_IMPORT_IN_PROGRESS)
+    """
+    with lock:
+        if has_existing_import(country_code):
+            sys.exit(EXIT_CODE_IMPORT_IN_PROGRESS)
 
-    task_id = country_code + TASK_ID_SEPARATOR + uuid.uuid4().__str__()
-    script_args = [script_filename, csv, country_code, period]
+        task_id = country_code + TASK_ID_SEPARATOR + uuid.uuid4().__str__()
+        script_args = [script_filename, csv, country_code, period]
 
-    __import_task.apply_async(task_track_started=True, task_id=task_id, args=script_args)
+        __import_task.apply_async(task_track_started=True, task_id=task_id, args=script_args)
 
-    return task_id
+        return task_id
 
 
 def has_existing_import(country_code):
@@ -87,12 +91,21 @@ def has_existing_import(country_code):
 def get_all_tasks():
     all_tasks = []
     inspect = __celery.control.inspect()
-    for tasks1 in inspect.reserved().values():
-        all_tasks.extend(tasks1)
-    for tasks2 in inspect.scheduled().values():
-        all_tasks.extend(tasks2)
-    for tasks3 in inspect.active().values():
-        all_tasks.extend(tasks3)
+
+    reserved = inspect.reserved()
+    if reserved is not None:
+        for tasks1 in reserved.values():
+            all_tasks.extend(tasks1)
+
+    scheduled = inspect.scheduled()
+    if scheduled is not None:
+        for tasks2 in scheduled.values():
+            all_tasks.extend(tasks2)
+
+    active = inspect.active()
+    if active is not None:
+        for tasks3 in active.values():
+            all_tasks.extend(tasks3)
 
     unique_tasks = []
     found_task_ids = []
