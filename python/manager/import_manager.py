@@ -31,9 +31,6 @@ class ImportStatus:
     """
     # Encapsulates information about the status and results of an import
     """
-    status = None
-    result = None
-
     def __init__(self, status=None, result=None):
         self.status = status
         self.result = result
