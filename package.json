@@ -14,7 +14,7 @@
   "scripts": {
     "start": "npm run prepublish && node lib",
     "prepare": "grunt build",
-    "pretest": "python -m unittest python.tests.import_manager_test",
+    "pretest": "pip install -r python/requirements.txt && python -m unittest python.tests.import_manager_test",
     "test": "grunt test"
   },
   "bin": {
