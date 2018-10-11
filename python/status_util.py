@@ -1,5 +1,5 @@
 """
-Clients should call this script rather than the import_manager
+Clients should call this utility script rather than the import_manager to fetch the import status
 """
 
 import sys

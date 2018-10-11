@@ -1,5 +1,5 @@
 """
-Clients should call functions in this module rather than the import_manager
+Clients should call this utility script rather than the import_manager to import a csv
 """
 
 import sys
