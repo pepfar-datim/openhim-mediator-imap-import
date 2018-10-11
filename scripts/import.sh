@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python scripts/python/import_util.py scripts/python/import.csv UG FY18
+python scripts/import_util.py scripts/import.csv UG FY18
