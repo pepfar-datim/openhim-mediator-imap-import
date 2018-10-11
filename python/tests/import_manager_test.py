@@ -6,7 +6,7 @@ import subprocess
 from unittest import TestCase
 from mock import patch
 from celery import Celery, states
-from python.manager.constants import ENV_CELERY_CONFIG
+from python.constants import ENV_CELERY_CONFIG
 
 # We need to have this here before the manager imports so that the env variable
 # is available when reference in the manager
@@ -15,8 +15,8 @@ project = 'python'
 celery_config = project+'.'+package+'.celeryconfig'
 os.environ[ENV_CELERY_CONFIG] = celery_config
 
-from python.manager import import_manager
-from python.manager.constants import *
+from python import import_manager
+from python.constants import *
 from test_import_script import EXPECTED_RESULT
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -170,18 +170,18 @@ class ImportManagerTest(TestCase):
     Contains unit tests specific to logic in the import_manager module
     """
 
-    @patch(project+'.manager.import_manager.get_all_tasks')
+    @patch(project+'.import_manager.get_all_tasks')
     def test_has_existing_import_should_return_false_if_there_are_no_import_task_for_the_country(self, get_all_tasks):
         get_all_tasks.return_value = [{TASK_ID_KEY: 'KE'+TASK_ID_SEPARATOR+'some-uuid'}]
         self.assertFalse(import_manager.has_existing_import('UG'))
 
-    @patch(project+'.manager.import_manager.get_all_tasks')
+    @patch(project+'.import_manager.get_all_tasks')
     def test_has_existing_import_should_return_True_if_there_an_import_task_for_the_country(self, get_all_tasks):
         country_code = 'UG'
         get_all_tasks.return_value = [{TASK_ID_KEY: country_code+TASK_ID_SEPARATOR+'some-uuid'}]
         self.assertTrue(import_manager.has_existing_import(country_code))
 
-    @patch(project+'.manager.import_manager.has_existing_import')
+    @patch(project+'.import_manager.has_existing_import')
     def test_import_csv_should_fail_if_the_country_has_an_import_in_progress(self, has_existing_import):
         country_code = 'UG'
         has_existing_import.return_value = True
