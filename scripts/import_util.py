@@ -13,5 +13,5 @@ response = {
     RESPONSE_FIELD_ID: task_id
 }
 
-print json.dump(response)
+print json.dumps(response)
 

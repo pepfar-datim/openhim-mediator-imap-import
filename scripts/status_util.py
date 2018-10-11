@@ -14,4 +14,4 @@ response = {
     RESPONSE_FIELD_RESULT: import_status.result
 }
 
-print json.dump(response)
+print json.dumps(response)
