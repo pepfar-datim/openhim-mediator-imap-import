@@ -62,7 +62,7 @@ def import_csv(script_filename, csv, country_code, period):
         task_id = country_code + TASK_ID_SEPARATOR + uuid.uuid4().__str__()
         script_args = [script_filename, csv, country_code, period]
 
-        __import_task.apply_async(task_track_started=True, task_id=task_id, args=script_args)
+        __import_task.apply_async(task_id=task_id, args=script_args)
 
         return task_id
 
