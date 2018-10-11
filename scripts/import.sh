@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python ../scripts/imapImport.py ../scripts/import_util.py ../scripts/import.csv UG FY18
+python ../scripts/import_util.py ../scripts/imapImport.py ../scripts/import.csv UG FY18
