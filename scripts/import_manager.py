@@ -37,12 +37,12 @@ class ImportStatus:
 
 
 @__celery.task(name='import_task')
-def __import_task(script_filename, csv, country_code, period):
+def __import_task(script_filename, country_code, period, csv):
     # Calls the specified python import script along with the rest of the args
-    return subprocess.check_output(['python', script_filename, csv, country_code, period])
+    return subprocess.check_output(['python', script_filename, country_code, period, csv])
 
 
-def import_csv(script_filename, csv, country_code, period):
+def import_csv(script_filename, country_code, period, csv):
     """ Imports a csv file asynchronously, will ony process the import if the country has no
      existing import
 
@@ -60,7 +60,7 @@ def import_csv(script_filename, csv, country_code, period):
             sys.exit(EXIT_CODE_IMPORT_IN_PROGRESS)
 
         task_id = country_code + TASK_ID_SEPARATOR + uuid.uuid4().__str__()
-        script_args = [script_filename, csv, country_code, period]
+        script_args = [script_filename, country_code, period, csv]
 
         __import_task.apply_async(task_id=task_id, args=script_args)
 
