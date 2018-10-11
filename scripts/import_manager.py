@@ -22,7 +22,7 @@ from celery import Celery
 from constants import *
 
 __celery = Celery('import_task')
-__celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'python.manager.celeryconfig'))
+__celery.config_from_object(os.getenv(ENV_CELERY_CONFIG, 'celeryconfig'))
 
 lock = Lock()
 

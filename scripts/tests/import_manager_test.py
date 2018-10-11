@@ -6,17 +6,17 @@ import subprocess
 from unittest import TestCase
 from mock import patch
 from celery import Celery, states
-from python.constants import ENV_CELERY_CONFIG
+from scripts.constants import ENV_CELERY_CONFIG
 
 # We need to have this here before the manager imports so that the env variable
 # is available when reference in the manager
 package = 'tests'
-project = 'python'
+project = 'scripts'
 celery_config = project+'.'+package+'.celeryconfig'
 os.environ[ENV_CELERY_CONFIG] = celery_config
 
-from python import import_manager
-from python.constants import *
+from scripts import import_manager
+from scripts.constants import *
 from test_import_script import EXPECTED_RESULT
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
