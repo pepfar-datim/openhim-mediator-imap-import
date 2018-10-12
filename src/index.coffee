@@ -49,9 +49,10 @@ handler = (script) -> (req, res) ->
       return res.status(500).send(err);
   });`
   period= req.query.period
+  country_name=req.query.country_name
   scriptCmd = path.join config.getConf().scriptsDirectory, script.filename
   args = buildArgs script
-  argsFromRequest = [country_code, period, "/opt/openhim-imap-import/imapImport.csv"]
+  argsFromRequest = [country_code, period, "/opt/openhim-imap-import/imapImport.csv", country_name]
   cmd = spawn scriptCmd, argsFromRequest
   logger.info "[#{openhimTransactionID}] Executing #{scriptCmd} #{args.join ' '}"
   appendToOut = (data) -> out = "#{out}#{data}"
