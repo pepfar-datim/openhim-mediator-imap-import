@@ -12,10 +12,11 @@
     "url": "https://github.com/maurya/openhim-mediator-imap-import/issues"
   },
   "scripts": {
-    "start": "npm run prepublish && node lib",
+    "start": "npm run prepare && node lib",
     "prepare": "grunt build",
-    "pretest": "pip install -r scripts/requirements.txt && pip install -r scripts/tests/test_requirements.txt && python -m unittest scripts.tests.import_manager_test",
-    "test": "grunt test"
+    "preinstall": "pip install -r scripts/requirements.txt",
+    "pretest": "pip install -r scripts/tests/test_requirements.txt",
+    "test": "python -m unittest scripts.tests.import_manager_test && grunt test"
   },
   "bin": {
     "openhim-mediator-imap-import": "./bin/openhim-mediator-imap-import.js"
@@ -23,6 +24,7 @@
   "main": "lib/index.js",
   "dependencies": {
     "body-parser": "^1.15.0",
+    "cors": "^2.8.4",
     "express-fileupload": "^0.4.0",
     "express": "^4.13.4",
     "moment": "^2.11.2",
