@@ -16,6 +16,7 @@ celery_config = project+'.'+package+'.celeryconfig'
 os.environ[ENV_CELERY_CONFIG] = celery_config
 
 from scripts import import_manager
+from scripts.import_manager import ImportInProgressError
 from scripts.constants import *
 from test_import_script import EXPECTED_RESULT
 
@@ -185,7 +186,6 @@ class ImportManagerTest(TestCase):
     def test_import_csv_should_fail_if_the_country_has_an_import_in_progress(self, has_existing_import):
         country_code = 'UG'
         has_existing_import.return_value = True
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(ImportInProgressError):
             import_manager.import_csv('import_file.py', country_code, 'some-period', 'some_file.csv', 'Uganda', 'False')
         has_existing_import.assert_called_once_with(country_code)
-        self.assertEquals(EXIT_CODE_IMPORT_IN_PROGRESS, cm.exception.code)

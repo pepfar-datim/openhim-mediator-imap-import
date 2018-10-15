@@ -13,7 +13,6 @@ functions in the import_util module
 """
 
 import os
-import sys
 import uuid
 from threading import Lock
 import subprocess
@@ -34,6 +33,10 @@ class ImportStatus:
     def __init__(self, status=None, result=None):
         self.status = status
         self.result = result
+
+
+class ImportInProgressError(StandardError):
+    pass
 
 
 @__celery.task(name='import_task')
@@ -59,7 +62,7 @@ def import_csv(script_filename, country_code, period, csv, country_name, test_mo
     """
     with lock:
         if has_existing_import(country_code):
-            sys.exit(EXIT_CODE_IMPORT_IN_PROGRESS)
+            raise ImportInProgressError
 
         task_id = country_code + TASK_ID_SEPARATOR + uuid.uuid4().__str__()
         script_args = [script_filename, country_code, period, csv, country_name, test_mode]
