@@ -55,11 +55,11 @@ handler = (script) -> (req, res) ->
   else
     test_mode= req.query.test_mode
   importScript = path.join config.getConf().scriptsDirectory, script.filename
-  scriptCmd = path.join config.getConf().scriptsDirectory, 'import.sh'
+  asyncImportScript = path.join config.getConf().scriptsDirectory, 'import_util.py'
   args = buildArgs script
-  argsFromRequest = [importScript, country_code, period, "/opt/openhim-imap-import/imapImport.csv", country_name, test_mode]
-  cmd = spawn scriptCmd, argsFromRequest
-  logger.info "[#{openhimTransactionID}] Executing #{scriptCmd} #{args.join ' '}"
+  argsFromRequest = [asyncImportScript, importScript, country_code, period, "/opt/openhim-imap-import/imapImport.csv", country_name, test_mode]
+  cmd = spawn 'python', argsFromRequest
+  logger.info "[#{openhimTransactionID}] Executing #{asyncImportScript} #{args.join ' '}"
   appendToOut = (data) -> out = "#{out}#{data}"
   cmd.stdout.on 'data', appendToOut
   cmd.stderr.on 'data', appendToOut
