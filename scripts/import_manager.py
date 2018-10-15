@@ -37,7 +37,7 @@ class ImportStatus:
 
 
 @__celery.task(name='import_task')
-def __import_task(script_filename, country_code, period, csv, country_name):
+def __import_task(script_filename, country_code, period, csv, country_name, test_mode):
     # Calls the specified python import script along with the rest of the args
     return subprocess.check_output(['python', script_filename, country_code, period, csv, country_name, test_mode])
 
@@ -52,6 +52,7 @@ def import_csv(script_filename, country_code, period, csv, country_name, test_mo
             period (str): The period of the year the import is assigned to
             csv (str): The csv file to import
             country_name (str): Name of the country
+            test_mode (str): Boolean True or False
 
         Returns:
               None
