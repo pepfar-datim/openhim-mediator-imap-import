@@ -133,7 +133,7 @@ class ImportManagerTaskTest(TestCase):
         # We need to be able to run this with npm test or as a single Test in the IDE
         if os.getcwd().endswith(package) is False:
             script = os.path.join(project, package, script)
-        task_id = import_manager.import_csv(script, country_code, 'FY18', 'file.csv', 'Uganda')
+        task_id = import_manager.import_csv(script, country_code, 'FY18', 'file.csv', 'Uganda', 'False')
         self.assertTrue(task_id.startswith(country_code))
         time.sleep(1)
         import_status = import_manager.get_import_status(task_id)
@@ -154,7 +154,7 @@ class ImportManagerTaskTest(TestCase):
         script = 'test_import_script.py'
         if os.getcwd().endswith(package) is False:
             script = os.path.join(project, package, script)
-        task_id = import_manager.import_csv(script, country_code, 'FY18', 'file.csv', 'Uganda')
+        task_id = import_manager.import_csv(script, country_code, 'FY18', 'file.csv', 'Uganda', 'False')
         self.assertTrue(task_id.startswith(country_code))
         time.sleep(1)
         import_status = import_manager.get_import_status(task_id)
@@ -186,6 +186,6 @@ class ImportManagerTest(TestCase):
         country_code = 'UG'
         has_existing_import.return_value = True
         with self.assertRaises(SystemExit) as cm:
-            import_manager.import_csv('import_file.py', country_code, 'some-period', 'some_file.csv', 'Uganda')
+            import_manager.import_csv('import_file.py', country_code, 'some-period', 'some_file.csv', 'Uganda', 'False')
         has_existing_import.assert_called_once_with(country_code)
         self.assertEquals(EXIT_CODE_IMPORT_IN_PROGRESS, cm.exception.code)
