@@ -18,11 +18,9 @@ try:
         RESPONSE_FIELD_RESULT: import_status.result
     }
 except:
-    error_msg = 'An error occurred'
-    print error_msg
     response = {
         RESPONSE_FIELD_STATUS: STATUS_FAILURE,
-        RESPONSE_FIELD_RESULT: error_msg
+        RESPONSE_FIELD_RESULT: 'An error occurred'
     }
 
 print json.dumps(response)
