@@ -15,7 +15,7 @@
     "start": "npm run prepare && node lib",
     "prepare": "grunt build",
     "preinstall": "pip install -r scripts/requirements.txt",
-    "pretest": "pip install -r scripts/tests/test_requirements.txt",
+    "pretest": "bash scripts/tests/pretest.sh",
     "test": "python -m unittest scripts.tests.import_manager_test && grunt test"
   },
   "bin": {
