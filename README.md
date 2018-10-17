@@ -34,6 +34,17 @@ end script
 - cd /usr/share/openhim-mediator-imap-import
 - sudo  npm install
 - sudo chown -R openhim:openhim /usr/share/openhim-mediator-imap-import/
+- Except for the tests folder, copy the rest of files from `/usr/share/openhim-mediator-imap-import/scripts` 
+  to the mediator's scripts directory
+- The mediator requires a running redis instance and a celery worker, you can find details on 
+  on how to install and run redis [here](https://redis.io/download), celery configurations reside in the 
+  `celeryconfig.py` file that you copied to the scripts directory above. 
+- To start the celery worker, you will need to navigate to the scripts directory and run the command below
+
+  `celery worker -A import_manager -l info -b redis://localhost`
+  
+  In the command above, `redis://localhost` is the broker url, if redis runs on a different machine or 
+  listening on a different port, the broker url needs to be of the form `redis://host_name:port`        
 - Start the mediator with `sudo service openhim-mediator-imap-import start`
 - restart or stop the mediator with `sudo service openhim-mediator-imap-import restart` or `sudo service openhim-mediator-imap-import stop`
 - Logs are available at - `/var/log/upstart/openhim-mediator-imap-import.log`
