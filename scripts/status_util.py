@@ -8,7 +8,6 @@ from constants import RESPONSE_FIELD_STATUS, RESPONSE_FIELD_RESULT, RESPONSE_FIE
 from constants import STATUS_CODE_OK, STATUS_CODE_ERROR, STATUS_CODE_BAD_REQUEST
 from import_manager import get_import_status
 
-
 response = None
 
 try:
