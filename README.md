@@ -59,6 +59,8 @@ chmod a+x /etc/init.d/celeryd
 sudo useradd -N -M --system -s /bin/bash celery
 sudo groupadd -g 10000 celery
 mkdir /var/run/celery/
+sudo usermod -a -G celery celery
+sudo usermod -a -G celery openhim
 chown celery:celery /var/run/celery/
 mkdir /var/log/celery/
 chown celery:celery /var/log/celery/
