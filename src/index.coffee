@@ -68,15 +68,16 @@ handler = (script) -> (req, res) ->
     logger.info "[#{openhimTransactionID}] Script exited with status #{code}"
 
     res.set 'Content-Type', 'application/json+openhim'
+    outputObject = JSON.parse(out)
     res.send {
       'x-mediator-urn': config.getMediatorConf().urn
       status: if code == 0 then 'Successful' else 'Failed'
       response:
-        status: if code == 0 then 200 else 500
+        status: if code == 0 then outputObject.status_code else 500
         headers:
-          'content-type': if code == 0 then 'application/json' else 'text/plain'
+          'content-type': 'text/plain'
           'Access-Control-Allow-Origin' : '*'
-        body: out
+        body: if code == 0 then outputObject.id else out
         timestamp: new Date()
     }
 
