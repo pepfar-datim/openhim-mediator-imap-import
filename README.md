@@ -51,6 +51,40 @@ end script
 
 Now you can setup your HIM channels and the mediator config via the console.
 
+To run celery as a daemon, 
+```
+apt-get install python-celery
+vim /etc/init.d/celeryd and add - https://raw.githubusercontent.com/celery/celery/3.1/extra/generic-init.d/celeryd
+chmod a+x /etc/init.d/celeryd
+sudo useradd -N -M --system -s /bin/bash celery
+sudo groupadd -g 10000 celery
+mkdir /var/run/celery/
+chown celery:celery /var/run/celery/
+mkdir /var/log/celery/
+chown celery:celery /var/log/celery/
+vim /etc/default/celeryd
+```
+
+```
+CELERYD_NODES="worker1"
+CELERY_BIN="/usr/local/bin/celery"
+CELERY_APP="import_manager"
+CELERYD_CHDIR="/opt/openhim-imap-import"
+CELERYD_OPTS="-l info -b redis://localhost --concurrency=2"
+CELERYD_LOG_FILE="/var/log/celery/%N.log"
+CELERYD_PID_FILE="/var/run/celery/%N.pid"
+CELERYD_USER="celery"
+CELERYD_GROUP="celery"
+CELERY_CREATE_DIRS=1
+```
+Manage the daemon with
+
+`/etc/init.d/celeryd start`
+
+`/etc/init.d/celeryd stop`
+
+`/etc/init.d/celeryd restart`
+
 ## Polling Channel Example
 Say we have a maintenance script `task.sh` that needs to execute on a daily basis. Copy the script into the mediator scripts directory and give it execute permission:
 ```
