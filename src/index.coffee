@@ -71,13 +71,13 @@ handler = (script) -> (req, res) ->
     outputObject = JSON.parse(out)
     res.send {
       'x-mediator-urn': config.getMediatorConf().urn
-      status: if code == 0 then 'Successful' else 'Failed'
+      status: if outputObject.status_code == 202  then 'Successful' else 'Failed'
       response:
-        status: if code == 0 then outputObject.status_code else 500
+        status: outputObject.status_code
         headers:
           'content-type': 'text/plain'
           'Access-Control-Allow-Origin' : '*'
-        body: if code == 0 then outputObject.id else out
+        body: if outputObject.status_code == 202 then outputObject.id else outputObject.result
         timestamp: new Date()
     }
 
