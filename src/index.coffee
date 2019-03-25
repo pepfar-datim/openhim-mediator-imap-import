@@ -68,6 +68,19 @@ handler = (script) -> (req, res) ->
     logger.info "[#{openhimTransactionID}] Script exited with status #{code}"
 
     res.set 'Content-Type', 'application/json+openhim'
+    unless req.query.country_code and req.query.period
+      res.set 'Content-Type', 'application/json+openhim'
+      res.send {
+        'x-mediator-urn': config.getMediatorConf().urn
+        status: 'Failed'
+        response:
+          status: 400
+          headers:
+            'content-type': 'text/plain'
+            'Access-Control-Allow-Origin' : '*'
+          body: "Both parameters - country_code and period  are required"
+          timestamp: new Date()
+      }
     outputObject = JSON.parse(out)
     res.send {
       'x-mediator-urn': config.getMediatorConf().urn
