@@ -14,7 +14,6 @@ path = require 'path'
 spawn = require('child_process').spawn
 
 
-
 buildArgs = (script) ->
   args = []
 
@@ -41,13 +40,23 @@ handler = (script) -> (req, res) ->
   openhimTransactionID = req.headers['x-openhim-transactionid']
   country_code= req.query.country_code
   out = ""
-  
-  imapImport = req.files.imapImport
-  console.log req.files.imapImport
-  `imapImport.mv('/opt/openhim-imap-import/imapImport.csv', function(err) {
-    if (err)
-      return res.status(500).send(err);
-  });`
+  imapImport = 'test'
+  delay = ->
+    new Promise((resolve, reject) ->
+      imapImport = req.files.imapImport
+      resolve imapImport
+      #reject('error');
+      return
+    )
+
+  delay().then (response) ->
+    console.log imapImport
+    `imapImport.mv('/opt/openhim-imap-import/imapImport.csv', function(err) {
+      if (err)
+        return res.status(500).send(err);
+      });`
+    return
+
   period= req.query.period
   country_name=req.query.country_name
   unless req.query.test_mode
