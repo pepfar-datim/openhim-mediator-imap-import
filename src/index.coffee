@@ -41,7 +41,7 @@ handler = (script) -> (req, res) ->
   country_code= req.query.country_code
   out = ""
   imapImport = req.files.imapImport
-  `imapImport.mv('/opt/openhim-imap-import/imapImport.csv', function(err) {
+  `imapImport.mv('/opt/ocl_datim/data/imapImport.csv', function(err) {
     if (err)
       return res.status(500).send(err);
   });`
@@ -54,7 +54,7 @@ handler = (script) -> (req, res) ->
   importScript = path.join config.getConf().scriptsDirectory, script.filename
   asyncImportScript = path.join config.getConf().scriptsDirectory, 'import_util.py'
   args = buildArgs script
-  argsFromRequest = [asyncImportScript, importScript, country_code, period, "/opt/openhim-imap-import/imapImport.csv", country_name, test_mode]
+  argsFromRequest = [asyncImportScript, importScript, country_code, period, "/opt/ocl_datim/data/imapImport.csv", country_name, test_mode]
   cmd = spawn 'python', argsFromRequest
   logger.info "[#{openhimTransactionID}] Executing #{asyncImportScript} #{args.join ' '}"
   appendToOut = (data) -> out = "#{out}#{data}"
