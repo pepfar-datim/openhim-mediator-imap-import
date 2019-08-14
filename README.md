@@ -3,6 +3,8 @@
 # openhim-mediator-imap-import
 OpenHIM Mediator for handling user requests to import indicator mappings in OCL. 
 
+**Repo Owner:** Annah Ngaruro [@angaruro](https://github.com/angaruro)
+
 ## installation
 
 - Git clone the repository  into `/usr/share/`
