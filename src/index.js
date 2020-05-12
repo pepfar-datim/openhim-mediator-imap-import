@@ -57,35 +57,54 @@ const setupEnv = function(script) {
 const handler = script => (function(req, res) {
   let test_mode;
   const openhimTransactionID = req.headers['x-openhim-transactionid'];
-  const {
-    country_code
-  } = req.query;
-  let out = "";
-  const {
-    imapImport
-  } = req.files;
-  imapImport.mv('/opt/ocl_datim/data/imapImport.csv', function(err) {
-    if (err)
-      return res.status(500).send(err);
-  });
-  const {
-    period
-  } = req.query;
-  const {
-    country_name
-  } = req.query;
-  if (!req.query.test_mode) {
-    test_mode="False";
-  } else {
-    ({
-      test_mode
-    } = req.query);
-  }
   const importScript = path.join(config.getConf().scriptsDirectory, script.filename);
-  const asyncImportScript = path.join(config.getConf().scriptsDirectory, 'import_util.py');
   const args = buildArgs(script);
-  const argsFromRequest = [asyncImportScript, importScript, country_code, period, "/opt/ocl_datim/data/imapImport.csv", country_name, test_mode];
-  const cmd = spawn('python', argsFromRequest);
+  const argsFromRequest =[];
+
+  let out = "";
+  if (req.method == "GET") {
+    if (req.query.importId){
+      args.push(("--importId"));
+      args.push((req.query.importId));
+    }
+    else {
+      args.push(("--country_code"));
+      args.push((req.params.domain));
+      args.push(("--period"));
+      args.push((req.params.period));
+      args.push(("--format"));
+      args.push((req.params.format));
+    }
+    argsFromRequest = args;
+  }
+  if (req.method == "POST") {
+    const country_code = req.query.country_code;
+    const period = req.query.period;
+    const country_name = req.query.country_name;
+    if (!req.query.test_mode) {
+      test_mode="False";
+    } else {
+        test_mode = req.query.test_mode);
+    }
+
+    const contentType = request.getHeader('Content-Type');
+    const imapImport='';
+    const importPath='';
+    if contentType==="application/json"
+      imapImport = JSON.stringify(req.body);
+      importPath = '/opt/ocl_datim/data/imapImport.json'
+    else if contentType==="text/csv"
+      imapImport = req.body;
+      importPath = '/opt/ocl_datim/data/imapImport.csv'
+    imapImport.mv(importPath, function(err) {
+      if (err)
+        return res.status(500).send(err);
+    });
+    const asyncImportScript = path.join(config.getConf().scriptsDirectory, 'import_util.py');
+    argsFromRequest = [asyncImportScript, importScript, country_code, period, importPath, country_name, test_mode];
+  });
+
+  const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',argsFromRequest);
   logger.info(`[${openhimTransactionID}] Executing ${asyncImportScript} ${args.join(' ')}`);
   const appendToOut = data => out = `${out}${data}`;
   cmd.stdout.on('data', appendToOut);
@@ -94,7 +113,7 @@ const handler = script => (function(req, res) {
   return cmd.on('close', function(code) {
     logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
 
-    res.set('Content-Type', 'application/json+openhim');
+  /*  res.set('Content-Type', 'application/json+openhim');
     if (!req.query.country_code || !req.query.period) {
       res.set('Content-Type', 'application/json+openhim');
       res.send({
@@ -111,7 +130,9 @@ const handler = script => (function(req, res) {
         }
       });
     }
-    const outputObject = JSON.parse(out);
+    */
+    //const outputObject = JSON.parse(out);
+    const outputObject = out;
     return res.send({
       'x-mediator-urn': config.getMediatorConf().urn,
       status: outputObject.status_code === 202  ? 'Successful' : 'Failed',
@@ -128,7 +149,7 @@ const handler = script => (function(req, res) {
 });
 });
 
-    
+
 
 
 // Express
@@ -160,7 +181,12 @@ const startExpress = () => getAvailableScripts(function(err, scriptNames) {
     for (let script of Array.from(config.getConf().scripts)) {
       (function(script) {
         if (isScriptNameValid(script.filename) && Array.from(scriptNames).includes(script.filename)) {
-          app.post(script.endpoint, handler(script));
+          if(script.method==="GET"){
+            app.get(script.endpoint, handler(script))
+          }
+          if(script.method==="POST"){
+            app.post(script.endpoint, handler(script))
+          }
           return logger.info(`Initialized endpoint '${script.endpoint}' for script '${script.filename}'`);
         } else {
           logger.warn(`Invalid script name specified '${script.filename}'`);

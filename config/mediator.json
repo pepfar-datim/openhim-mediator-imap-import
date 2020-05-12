@@ -26,6 +26,13 @@
           "type": "string"
         },
         {
+          "param": "method",
+          "displayName": "Method",
+          "description": "The method to initialize the endpoint",
+          "type": "option",
+          "values": ["GET", "POST"]
+        },
+        {
           "param": "filename",
           "displayName": "Filename",
           "description": "The script filename. The script must be located in the configured scripts directory.",
