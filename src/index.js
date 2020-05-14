@@ -62,7 +62,7 @@ const handler = script => function (req, res) {
   const argsFromRequest =[];
 
   let out = "";
-  if (req.method == "GET") {
+  if (req.method === "GET") {
     if (req.query.importId){
       args.push(("--importId"));
       args.push((req.query.importId));
@@ -101,7 +101,7 @@ const handler = script => function (req, res) {
       });
   });
   }
-  if (req.method == "POST") {
+  if (req.method === "POST") {
     args.push(("--country_code"));
     args.push((req.params.country_code));
     args.push(("--period"));
