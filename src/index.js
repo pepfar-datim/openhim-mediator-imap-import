@@ -54,7 +54,7 @@ const setupEnv = function(script) {
   }
 };
 
-const handler = script => (function(req, res) {
+const handler = script => function (req, res) {
   let test_mode;
   const openhimTransactionID = req.headers['x-openhim-transactionid'];
   const importScript = path.join(config.getConf().scriptsDirectory, script.filename);
