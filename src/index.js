@@ -111,7 +111,7 @@ const handler = script => (function(req, res) {
     if (!req.query.test_mode) {
       test_mode="False";
     } else {
-        test_mode = req.query.test_mode);
+        test_mode = req.query.test_mode;
     }
     const contentType = request.getHeader('Content-Type');
     const imapImport='';
