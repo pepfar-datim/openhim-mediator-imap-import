@@ -157,14 +157,9 @@ const handler = script => (function(req, res) {
   }
 }
 
-
-
-
 // Express
-
-let app = null;
-let server = null;
-
+let app = null
+let server = null
 
 const getAvailableScripts = callback => fs.readdir(config.getConf().scriptsDirectory, callback);
 
