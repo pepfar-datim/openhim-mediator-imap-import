@@ -14,9 +14,9 @@
   "scripts": {
     "start": "npm run prepare && node lib",
     "prepare": "grunt build",
-    "preinstall": "pip install -r scripts/requirements.txt",
+    "preinstall": "pipenv install -r scripts/requirements.txt",
     "pretest": "bash scripts/tests/pretest.sh",
-    "test": "python -m unittest scripts.tests.import_manager_test && grunt test"
+    "test": "pipenv run python -m unittest scripts.tests.import_manager_test && grunt test"
   },
   "bin": {
     "openhim-mediator-imap-import": "./bin/openhim-mediator-imap-import.js"

@@ -8,7 +8,7 @@ REDIS_BIN_DIR=${TEST_DIR}/${REDIS_NAME}/bin
 REDIS_ARCHIVE=${REDIS_NAME_AND_VERSION}.tar.gz
 REDIS_SRC_BIN=${TEST_DIR}/${REDIS_NAME_AND_VERSION}/src
 
-pip install -r ${TEST_DIR}/test_requirements.txt
+pipenv install -r ${TEST_DIR}/test_requirements.txt
 
 if [ ! -d ${REDIS_BIN_DIR} ]; then
     echo "Generating binaries for the test redis server"
