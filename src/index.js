@@ -17,9 +17,7 @@ const cors = require('cors');
 const util = require('./util');
 const fs = require('fs');
 const path = require('path');
-const {
-  spawn
-} = require('child_process');
+const spawn = require('child_process').spawn;
 
 
 const buildArgs = function(script) {
@@ -105,13 +103,13 @@ const handler = script => function (req, res) {
     return cmd.on('close', function(code) {
       logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
 
-      const outputObject = out;
+      const outputObject = JSON.parse(out);
       if (error === false && format) {
         res.set('Content-Type', contenttype);
         if (format === 'csv') {
           res.set('Content-Disposition', 'inline; filename="'+req.params.country_code+'.csv"');
         }
-        return res.send(out.body);
+        return res.send(outputObject);
       }
       return res.send({
         'x-mediator-urn': config.getMediatorConf().urn,
