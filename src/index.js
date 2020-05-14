@@ -75,18 +75,44 @@ const handler = script => (function(req, res) {
       args.push(("--format"));
       args.push((req.params.format));
     }
-    argsFromRequest = args;
+    argsFromRequest.push(importScript);
+    argsFromRequest = push(args);
+    const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',argsFromRequest);
+    logger.info(`[${openhimTransactionID}] Executing ${asyncImportScript} ${args.join(' ')}`);
+    const appendToOut = data => out = `${out}${data}`;
+    cmd.stdout.on('data', appendToOut);
+    cmd.stderr.on('data', appendToOut);
+
+    return cmd.on('close', function(code) {
+      logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
+
+      const outputObject = out;
+      return res.send({
+        'x-mediator-urn': config.getMediatorConf().urn,
+        status: code === 0 ? 'Successful' : 'Failed',
+        response: {
+          status: code === 0 ? 200 : 500,
+          headers: {
+            'content-type': 'application/json'
+          },
+          body: out,
+          timestamp: new Date()
+        }
+      });
+  });
   }
   if (req.method == "POST") {
-    const country_code = req.query.country_code;
-    const period = req.query.period;
-    const country_name = req.query.country_name;
+    args.push(("--country_code"));
+    args.push((req.params.domain));
+    args.push(("--period"));
+    args.push((req.params.period));
+    args.push(("--country_name"));
+    args.push((req.params.country_name));
     if (!req.query.test_mode) {
       test_mode="False";
     } else {
         test_mode = req.query.test_mode);
     }
-
     const contentType = request.getHeader('Content-Type');
     const imapImport='';
     const importPath='';
@@ -102,51 +128,31 @@ const handler = script => (function(req, res) {
     });
     const asyncImportScript = path.join(config.getConf().scriptsDirectory, 'import_util.py');
     argsFromRequest = [asyncImportScript, importScript, country_code, period, importPath, country_name, test_mode];
-  });
+    const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',argsFromRequest);
+    logger.info(`[${openhimTransactionID}] Executing ${asyncImportScript} ${args.join(' ')}`);
+    const appendToOut = data => out = `${out}${data}`;
+    cmd.stdout.on('data', appendToOut);
+    cmd.stderr.on('data', appendToOut);
 
-  const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',argsFromRequest);
-  logger.info(`[${openhimTransactionID}] Executing ${asyncImportScript} ${args.join(' ')}`);
-  const appendToOut = data => out = `${out}${data}`;
-  cmd.stdout.on('data', appendToOut);
-  cmd.stderr.on('data', appendToOut);
+    return cmd.on('close', function(code) {
+      logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
 
-  return cmd.on('close', function(code) {
-    logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
-
-  /*  res.set('Content-Type', 'application/json+openhim');
-    if (!req.query.country_code || !req.query.period) {
-      res.set('Content-Type', 'application/json+openhim');
-      res.send({
+      const outputObject = out;
+      return res.send({
         'x-mediator-urn': config.getMediatorConf().urn,
-        status: 'Failed',
+        status: outputObject.status_code === 202  ? 'Successful' : 'Failed',
         response: {
-          status: 400,
+          status: outputObject.status_code,
           headers: {
             'content-type': 'text/plain',
             'Access-Control-Allow-Origin' : '*'
           },
-          body: "Both parameters - country_code and period  are required",
+          body: outputObject.status_code === 202 ? outputObject.id : outputObject.result,
           timestamp: new Date()
         }
       });
-    }
-    */
-    //const outputObject = JSON.parse(out);
-    const outputObject = out;
-    return res.send({
-      'x-mediator-urn': config.getMediatorConf().urn,
-      status: outputObject.status_code === 202  ? 'Successful' : 'Failed',
-      response: {
-        status: outputObject.status_code,
-        headers: {
-          'content-type': 'text/plain',
-          'Access-Control-Allow-Origin' : '*'
-        },
-        body: outputObject.status_code === 202 ? outputObject.id : outputObject.result,
-        timestamp: new Date()
-      }
-    });
-});
+  });
+  });
 });
 
 
