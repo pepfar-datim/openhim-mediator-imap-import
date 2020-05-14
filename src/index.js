@@ -116,12 +116,14 @@ const handler = script => (function(req, res) {
     const contentType = request.getHeader('Content-Type');
     const imapImport='';
     const importPath='';
-    if contentType==="application/json"
+    if (contentType==="application/json"){
       imapImport = JSON.stringify(req.body);
       importPath = '/opt/ocl_datim/data/imapImport.json'
-    else if contentType==="text/csv"
+    }
+    else if (contentType==="text/csv"){
       imapImport = req.body;
       importPath = '/opt/ocl_datim/data/imapImport.csv'
+    }
     imapImport.mv(importPath, function(err) {
       if (err)
         return res.status(500).send(err);
