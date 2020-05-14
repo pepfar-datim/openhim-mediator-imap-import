@@ -12,16 +12,17 @@
     "url": "https://github.com/maurya/openhim-mediator-imap-import/issues"
   },
   "scripts": {
-    "start": "npm run prepare && node lib",
-    "prepare": "grunt build",
+    "start": "node --harmony src/",
     "preinstall": "pipenv install -r scripts/requirements.txt",
     "pretest": "bash scripts/tests/pretest.sh",
-    "test": "pipenv run python -m unittest scripts.tests.import_manager_test && grunt test"
+    "test": "mocha",
+    "test:lint": "standard src/**/*.js",
+    "test": "pipenv run python -m unittest scripts.tests.import_manager_test"
   },
   "bin": {
     "openhim-mediator-imap-import": "./bin/openhim-mediator-imap-import.js"
   },
-  "main": "lib/index.js",
+  "main": "src/index.js",
   "dependencies": {
     "body-parser": "^1.15.0",
     "cors": "^2.8.4",
@@ -35,19 +36,9 @@
     "winston": "^2.2.0"
   },
   "devDependencies": {
-    "coffee-script": "^1.11.0",
-    "coffeelint": "^1.14.2",
-    "grunt": "^0.4.5",
-    "grunt-cli": "^1.2.0",
-    "grunt-coffeelint": "^0.0.15",
-    "grunt-contrib-clean": "^1.0.0",
-    "grunt-contrib-coffee": "^1.0.0",
-    "grunt-contrib-copy": "^0.8.2",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-env": "^0.4.4",
-    "grunt-express-server": "^0.5.2",
-    "grunt-mocha-cli": "^2.0.0",
-    "should": "^8.2.2"
+    "mocha": "^4.0.1",
+    "should": "^8.2.2",
+    "standard": "^10.0.3"
   },
   "keywords": [
     "openhim",
