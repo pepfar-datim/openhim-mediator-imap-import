@@ -199,59 +199,59 @@ const startExpress = () => getAvailableScripts(function(err, scriptNames) {
     }
   }
 
-  server = app.listen(config.getConf().server.port, config.getConf().server.hostname, () => logger.info(`[${process.env.NODE_ENV}] ${config.getMediatorConf().name} running on port ${server.address().address}:${server.address().port}`));
-  return server.timeout = 0;
-});
+  server = app.listen(config.getConf().server.port, config.getConf().server.hostname,
+    () => logger.info(`[${process.env.NODE_ENV}] ${config.getMediatorConf().name} running on port ${server.address().address}:${server.address().port}`))
+  server.timeout = 0
+  return server
+})
 
-const restartExpress = function() {
+const restartExpress = function () {
   if (server) {
-    logger.info("Re-initializing express server ...");
-    server.close(); // existing connection will still be processed async
-    return startExpress(); // start server with new config
+    logger.info('Re-initializing express server ...')
+    server.close() // existing connection will still be processed async
+    return startExpress() // start server with new config
   }
-};
+}
 
-
-const debugLogConfig = function() {
+const debugLogConfig = function () {
   if (config.getConf().logger.level === 'debug') {
-    logger.debug('Full config:');
-    return logger.debug(JSON.stringify(config.getConf(), null, '  '));
+    logger.debug('Full config:')
+    return logger.debug(JSON.stringify(config.getConf(), null, '  '))
   }
 };
 
 
 if (process.env.NODE_ENV !== 'test') {
-  logger.info('Attempting to register mediator with core ...');
-  config.getConf().openhim.api.urn = config.getMediatorConf().urn;
+  logger.info('Attempting to register mediator with core ...')
+  config.getConf().openhim.api.urn = config.getMediatorConf().urn
 
-  mediatorUtils.registerMediator(config.getConf().openhim.api, config.getMediatorConf(), function(err) {
+  mediatorUtils.registerMediator(config.getConf().openhim.api, config.getMediatorConf(), function (err) {
     if (err) {
-      logger.error(err);
-      process.exit(1);
+      logger.error(err)
+      process.exit(1)
     }
 
-    logger.info('Mediator has been successfully registered');
+    logger.info('Mediator has been successfully registered')
 
-    const configEmitter = mediatorUtils.activateHeartbeat(config.getConf().openhim.api);
+    const configEmitter = mediatorUtils.activateHeartbeat(config.getConf().openhim.api)
 
-    configEmitter.on('config', function(newConfig) {
-      logger.info('Received updated config from core');
-      config.updateConf(newConfig);
-      debugLogConfig();
-      return restartExpress();
-    });
+    configEmitter.on('config', function (newConfig) {
+      logger.info('Received updated config from core')
+      config.updateConf(newConfig)
+      debugLogConfig()
+      return restartExpress()
+    })
 
-    configEmitter.on('error', err => logger.error(err));
+    configEmitter.on('error', err => logger.error(err))
 
-    return mediatorUtils.fetchConfig(config.getConf().openhim.api, function(err, newConfig) {
-      if (err) { return logger.error(err); }
-      logger.info('Received initial config from core');
-      config.updateConf(newConfig);
-      debugLogConfig();
-      return startExpress();
-    });
-  });
+    return mediatorUtils.fetchConfig(config.getConf().openhim.api, function (err, newConfig) {
+      if (err) { return logger.error(err) }
+      logger.info('Received initial config from core')
+      config.updateConf(newConfig)
+      debugLogConfig()
+      return startExpress()
+    })
+  })
 }
-
 
 exports.app = app;
