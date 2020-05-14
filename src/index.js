@@ -61,6 +61,7 @@ const handler = script => function (req, res) {
   const args = buildArgs(script);
   const argsFromRequest =[];
   const error=false;
+  let contenttype = 'application/json';
 
   let out = "";
   if (req.method === "GET") {
@@ -79,9 +80,8 @@ const handler = script => function (req, res) {
         format = req.params.format.toLowerCase();
       } catch (e) {
         error = true;
-        res.send("Error");  
+        res.send("Error");
       }
-      let contenttype = 'application/json';
       if (format === 'json') {
         contenttype = 'application/json';
       }
