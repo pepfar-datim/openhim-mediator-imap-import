@@ -60,6 +60,7 @@ const handler = script => function (req, res) {
   const importScript = path.join(config.getConf().scriptsDirectory, script.filename);
   const args = buildArgs(script);
   const argsFromRequest =[];
+  const error=false;
 
   let out = "";
   if (req.method === "GET") {
@@ -74,6 +75,25 @@ const handler = script => function (req, res) {
       args.push((req.params.period));
       args.push(("--format"));
       args.push((req.params.format));
+      try {
+        format = req.params.format.toLowerCase();
+      } catch (e) {
+        error = true;
+        res.send("Error");  
+      }
+      let contenttype = 'application/json';
+      if (format === 'json') {
+        contenttype = 'application/json';
+      }
+      if (format === 'html') {
+        contenttype = 'text/html';
+      }
+      if (format === 'xml') {
+        contenttype = 'application/xml';
+      }
+      if (format === 'csv') {
+        contenttype = 'application/csv';
+      }
     }
     args.unshift(importScript);
     const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',args);
@@ -86,6 +106,13 @@ const handler = script => function (req, res) {
       logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
 
       const outputObject = out;
+      if (error === false && format) {
+        res.set('Content-Type', contenttype);
+        if (format === 'csv') {
+          res.set('Content-Disposition', 'inline; filename="'+req.params.country_code+'.csv"');
+        }
+        return res.send(out.body);
+      }
       return res.send({
         'x-mediator-urn': config.getMediatorConf().urn,
         status: code === 0 ? 'Successful' : 'Failed',
@@ -94,7 +121,7 @@ const handler = script => function (req, res) {
           headers: {
             'content-type': 'application/json'
           },
-          body: out,
+          body: outputObject.body,
           timestamp: new Date()
         }
       });
