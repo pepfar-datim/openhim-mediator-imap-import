@@ -75,9 +75,8 @@ const handler = script => function (req, res) {
       args.push(("--format"));
       args.push((req.params.format));
     }
-    argsFromRequest.push(importScript);
-    argsFromRequest = push(args);
-    const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',argsFromRequest);
+    args.unshift(importScript);
+    const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',args);
     logger.info(`[${openhimTransactionID}] Executing ${asyncImportScript} ${args.join(' ')}`);
     const appendToOut = data => out = `${out}${data}`;
     cmd.stdout.on('data', appendToOut);
