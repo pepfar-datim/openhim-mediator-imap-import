@@ -69,7 +69,7 @@ const handler = script => function (req, res) {
     }
     else {
       args.push(("--country_code"));
-      args.push((req.params.domain));
+      args.push((req.params.country_code));
       args.push(("--period"));
       args.push((req.params.period));
       args.push(("--format"));
@@ -103,7 +103,7 @@ const handler = script => function (req, res) {
   }
   if (req.method == "POST") {
     args.push(("--country_code"));
-    args.push((req.params.domain));
+    args.push((req.params.country_code));
     args.push(("--period"));
     args.push((req.params.period));
     args.push(("--country_name"));
