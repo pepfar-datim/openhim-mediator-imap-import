@@ -152,10 +152,10 @@ const handler = script => (function(req, res) {
           body: outputObject.status_code === 202 ? outputObject.id : outputObject.result,
           timestamp: new Date()
         }
-      });
-  });
-  });
-});
+      })
+    })
+  }
+}
 
 
 
