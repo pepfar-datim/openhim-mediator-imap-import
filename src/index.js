@@ -103,7 +103,7 @@ const handler = script => function (req, res) {
     return cmd.on('close', function(code) {
       logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
 
-      const outputObject = JSON.parse(out);
+      const outputObject = out;
       if (error === false && format) {
         res.set('Content-Type', contenttype);
         if (format === 'csv') {
@@ -119,7 +119,7 @@ const handler = script => function (req, res) {
           headers: {
             'content-type': 'application/json'
           },
-          body: outputObject.body,
+          body: outputObject,
           timestamp: new Date()
         }
       });
@@ -130,16 +130,14 @@ const handler = script => function (req, res) {
     args.push((req.params.country_code));
     args.push(("--period"));
     args.push((req.params.period));
-    args.push(("--country_name"));
-    args.push((req.params.country_name));
     if (!req.query.test_mode) {
       test_mode="False";
     } else {
         test_mode = req.query.test_mode;
     }
-    const contentType = request.getHeader('Content-Type');
-    const imapImport='';
-    const importPath='';
+    const contentType = req.get('Content-Type');
+    let imapImport='';
+    let importPath='';
     if (contentType==="application/json"){
       imapImport = JSON.stringify(req.body);
       importPath = '/opt/ocl_datim/data/imapImport.json'
@@ -148,13 +146,13 @@ const handler = script => function (req, res) {
       imapImport = req.body;
       importPath = '/opt/ocl_datim/data/imapImport.csv'
     }
-    imapImport.mv(importPath, function(err) {
-      if (err)
-        return res.status(500).send(err);
-    });
+    fs.writeFile(importPath, imapImport, (err) => {
+      if (err) throw err;
+      console.log('imap Request body saved');
+  });
     const asyncImportScript = path.join(config.getConf().scriptsDirectory, 'import_util.py');
-    argsFromRequest = [asyncImportScript, importScript, country_code, period, importPath, country_name, test_mode];
-    const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',argsFromRequest);
+    args.unshift(asyncImportScript,importScript);
+    const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',args);
     logger.info(`[${openhimTransactionID}] Executing ${asyncImportScript} ${args.join(' ')}`);
     const appendToOut = data => out = `${out}${data}`;
     cmd.stdout.on('data', appendToOut);
@@ -163,7 +161,7 @@ const handler = script => function (req, res) {
     return cmd.on('close', function(code) {
       logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
 
-      const outputObject = out;
+      const outputObject = JSON.parse(out);
       return res.send({
         'x-mediator-urn': config.getMediatorConf().urn,
         status: outputObject.status_code === 202  ? 'Successful' : 'Failed',
@@ -181,7 +179,7 @@ const handler = script => function (req, res) {
   }
 }
 
-// Express
+
 let app = null
 let server = null
 
