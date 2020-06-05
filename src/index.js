@@ -1,9 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 require('./init');
 const fileUpload = require('express-fileupload');
 
@@ -73,28 +67,7 @@ const handler = script => function (req, res) {
     args.push(("--period"));
     args.push((period));
   }
-  if (req.query.format){
-    format = req.query.format.toLowerCase();
-  }
-  else {
-    format="csv";
-  }
-  if (format === 'json') {
-    contenttype = 'application/json';
-  }
-  else if (format === 'html') {
-    contenttype = 'text/html';
-  }
-  else if (format === 'xml') {
-    contenttype = 'application/xml';
-  }
-  else {
-    format = "csv";
-    contenttype = 'application/csv';
-  }
-  args.push(("--format"));
-  args.push((format));
-  
+
   if (req.params.country_code){
     country_code=req.params.country_code;
   }
@@ -115,25 +88,46 @@ const handler = script => function (req, res) {
       test_mode = req.query.test_mode;
   }
   if (req.method === "GET") {
-  args.unshift(importScript);
-  const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',args);
-  logger.info(`[${openhimTransactionID}] Executing ${importScript} ${args.join(' ')}`);
-  const appendToOut = data => out = `${out}${data}`;
-  cmd.stdout.on('data', appendToOut);
-  cmd.stderr.on('data', appendToOut);
-
-  return cmd.on('close', function(code) {
-    logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
-    const outputObject = out;
-    if (error === false && format) {
-      res.set('Content-Type', contenttype);
-      if (format === 'csv') {
-        res.set('Content-Disposition', 'inline; filename="'+req.params.country_code+'.csv"');
-      }
+    if (req.query.format){
+      format = req.query.format.toLowerCase();
     }
-    return res.send(outputObject);
-  });
-}
+    else {
+      format="csv";
+    }
+    if (format === 'json') {
+      contenttype = 'application/json';
+    }
+    else if (format === 'html') {
+      contenttype = 'text/html';
+    }
+    else if (format === 'xml') {
+      contenttype = 'application/xml';
+    }
+    else {
+      format = "csv";
+      contenttype = 'application/csv';
+    }
+    args.push(("--format"));
+    args.push((format));
+    args.unshift(importScript);
+    const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',args);
+    logger.info(`[${openhimTransactionID}] Executing ${importScript} ${args.join(' ')}`);
+    const appendToOut = data => out = `${out}${data}`;
+    cmd.stdout.on('data', appendToOut);
+    cmd.stderr.on('data', appendToOut);
+
+    return cmd.on('close', function(code) {
+      logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
+      const outputObject = out;
+      if (error === false && format) {
+        res.set('Content-Type', contenttype);
+        if (format === 'csv') {
+          res.set('Content-Disposition', 'inline; filename="'+req.params.country_code+'.csv"');
+        }
+      }
+      return res.send(outputObject);
+    });
+  }
 
   if (req.method === "POST") {
     const contentType = req.get('Content-Type');
