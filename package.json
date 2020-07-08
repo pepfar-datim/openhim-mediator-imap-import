@@ -1,6 +1,6 @@
 {
   "name": "openhim-mediator-imap-import",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "OpenHIM Mediator for handling user requests for importing IMAP (indicator mappings) in OCL",
   "author": "Maurya",
   "homepage": "https://github.com/maurya/openhim-mediator-imap-import",

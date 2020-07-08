@@ -47,13 +47,12 @@ const setupEnv = function(script) {
 };
 
 const handler = script => function (req, res) {
-  let test_mode, format,period,country_code;
+  let test_mode, format,period,country_code,importId;
   const openhimTransactionID = req.headers['x-openhim-transactionid'];
-  const importScript = path.join(config.getConf().scriptsDirectory, script.filename);
+  const scriptCmd = path.join(config.getConf().scriptsDirectory, script.filename)
   const args = buildArgs(script);
   const argsFromRequest =[];
-  const error=false;
-  let contenttype = 'application/json';
+
 
   let out = "";
 
@@ -78,16 +77,23 @@ const handler = script => function (req, res) {
     args.push(("--country_code"));
     args.push((country_code));
   }
-  if (req.query.importId){
-    args.push(("--importId"));
-    args.push((req.query.importId));
+  if (req.params.importId){
+    importId=req.params.importId;
+  }
+  else if (req.query.importId){
+    importId=req.query.importId;
+  }
+  if (importId){
+    args.push(("--bulkImportId"));
+    args.push((importId));
   }
   if (!req.query.test_mode) {
     test_mode="False";
   } else {
       test_mode = req.query.test_mode;
   }
-  if (req.method === "GET") {
+  if (req.method == "GET") {
+    let contenttype;
     if (req.query.format){
       format = req.query.format.toLowerCase();
     }
@@ -109,9 +115,10 @@ const handler = script => function (req, res) {
     }
     args.push(("--format"));
     args.push((format));
-    args.unshift(importScript);
+
+    args.unshift(scriptCmd);
     const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',args);
-    logger.info(`[${openhimTransactionID}] Executing ${importScript} ${args.join(' ')}`);
+    logger.info(`[${openhimTransactionID}] Executing ${scriptCmd} ${args.join(' ')}`);
     const appendToOut = data => out = `${out}${data}`;
     cmd.stdout.on('data', appendToOut);
     cmd.stderr.on('data', appendToOut);
@@ -119,7 +126,7 @@ const handler = script => function (req, res) {
     return cmd.on('close', function(code) {
       logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
       const outputObject = out;
-      if (error === false && format) {
+      if (format) {
         res.set('Content-Type', contenttype);
         if (format === 'csv') {
           res.set('Content-Disposition', 'inline; filename="'+req.params.country_code+'.csv"');
@@ -129,47 +136,36 @@ const handler = script => function (req, res) {
     });
   }
 
-  if (req.method === "POST") {
-    const contentType = req.get('Content-Type');
+  if (req.method == "POST") {
+    let contentType = req.get('Content-Type');
+    console.log('request body');
+    console.log(req.body);
     let imapImport='';
     let importPath='';
-    if (contentType==="application/json"){
-      imapImport = JSON.stringify(req.body);
-      importPath = '/opt/ocl_datim/data/imapImport.json'
-    }
-    else if (contentType==="text/csv"){
+    if (contentType==="text/csv" || contentType==="text/plain"){
       imapImport = req.body;
       importPath = '/opt/ocl_datim/data/imapImport.csv'
+    }
+    else if (contentType==="application/json"){
+      imapImport = JSON.stringify(req.body);
+      importPath = '/opt/ocl_datim/data/imapImport.json'
+      console.log('saving json');
     }
     fs.writeFile(importPath, imapImport, (err) => {
       if (err) throw err;
       console.log('imap Request body saved');
   });
-    const asyncImportScript = path.join(config.getConf().scriptsDirectory, 'import_util.py');
-    args.unshift(asyncImportScript,importScript);
-    const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',args);
-    logger.info(`[${openhimTransactionID}] Executing ${asyncImportScript} ${args.join(' ')}`);
+  args.push(importPath);
+  args.unshift(scriptCmd);
+  const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim-viNFXhy9/bin/python',args);
+  logger.info(`[${openhimTransactionID}] Executing ${scriptCmd} ${args.join(' ')}`);
     const appendToOut = data => out = `${out}${data}`;
     cmd.stdout.on('data', appendToOut);
     cmd.stderr.on('data', appendToOut);
 
     return cmd.on('close', function(code) {
       logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
-
-      const outputObject = JSON.parse(out);
-      return res.send({
-        'x-mediator-urn': config.getMediatorConf().urn,
-        status: outputObject.status_code === 202  ? 'Successful' : 'Failed',
-        response: {
-          status: outputObject.status_code,
-          headers: {
-            'content-type': 'text/plain',
-            'Access-Control-Allow-Origin' : '*'
-          },
-          body: outputObject.status_code === 202 ? outputObject.id : outputObject.result,
-          timestamp: new Date()
-        }
-      })
+      return res.send(out);
     })
   }
 }
@@ -194,7 +190,7 @@ const startExpress = () => getAvailableScripts(function(err, scriptNames) {
 
   app.use(cors());
 
-  app.use(bodyParser.json());
+  app.use(bodyParser.text());
   app.use(fileUpload());
 
   if (config.getConf().scripts) {
