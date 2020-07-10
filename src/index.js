@@ -47,7 +47,7 @@ const setupEnv = function(script) {
 };
 
 const handler = script => function (req, res) {
-  let test_mode, format,period,country_code,importId;
+  let test_mode, format,period,country_code,importId, status;
   const openhimTransactionID = req.headers['x-openhim-transactionid'];
   const scriptCmd = path.join(config.getConf().scriptsDirectory, script.filename)
   const args = buildArgs(script);
@@ -132,9 +132,16 @@ const handler = script => function (req, res) {
           res.set('Content-Disposition', 'inline; filename="'+req.params.country_code+'.csv"');
         }
       }
-      return res.send(outputObject);
-    });
-  }
+      if (importId){
+        console.log(out);
+        out=out.replace(/'/g, '"')
+        console.log(out);
+        var output_check=JSON.parse(out);
+        console.log(output_check.status_code);
+    }
+      return res.status(output_check.status_code).send(out);
+  })
+}
 
   if (req.method == "POST") {
     let contentType = req.get('Content-Type');
@@ -165,7 +172,20 @@ const handler = script => function (req, res) {
 
     return cmd.on('close', function(code) {
       logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
-      return res.send(out);
+      res.set('Content-Type', 'application/json+openhim')
+      return res.send({
+        'x-mediator-urn': config.getMediatorConf().urn,
+        status: code === 0 ? 'Successful' : 'Failed',
+        response: {
+          status: code === 0 ? 202 : 500,
+          headers: {
+            'content-type': 'application/json',
+            'Access-Control-Allow-Origin' : '*'
+          },
+          body: out,
+          timestamp: new Date()
+        }
+      })
     })
   }
 }
@@ -191,6 +211,7 @@ const startExpress = () => getAvailableScripts(function(err, scriptNames) {
   app.use(cors());
 
   app.use(bodyParser.text());
+  app.use(bodyParser.json());
   app.use(fileUpload());
 
   if (config.getConf().scripts) {
