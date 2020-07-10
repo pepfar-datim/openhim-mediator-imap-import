@@ -139,7 +139,15 @@ const handler = script => function (req, res) {
         var output_check=JSON.parse(out);
         console.log(output_check.status_code);
     }
-      return res.status(output_check.status_code).send(out);
+      return res.status(output_check.status_code).send({
+        response: {
+          status: code === 0 ? 200 : 500,
+          headers: {
+            'Access-Control-Allow-Origin' : '*'
+          },
+          body: out,
+        }
+      });
   })
 }
 
