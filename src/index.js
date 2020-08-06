@@ -47,7 +47,7 @@ const setupEnv = function(script) {
 };
 
 const handler = script => function (req, res) {
-  let test_mode, format,period,country_code,importId, status;
+  let test_mode, format,period,country_code,importId, status,status_code;
   const openhimTransactionID = req.headers['x-openhim-transactionid'];
   const scriptCmd = path.join(config.getConf().scriptsDirectory, script.filename)
   const args = buildArgs(script);
@@ -98,20 +98,20 @@ const handler = script => function (req, res) {
       format = req.query.format.toLowerCase();
     }
     else {
-      format="csv";
+      format="json";
     }
-    if (format === 'json') {
-      contenttype = 'application/json';
-    }
-    else if (format === 'html') {
+    if (format === 'html') {
       contenttype = 'text/html';
     }
     else if (format === 'xml') {
       contenttype = 'application/xml';
     }
-    else {
-      format = "csv";
+    else if (format === 'csv'){
       contenttype = 'application/csv';
+    }
+    else {
+      format="json";
+      contenttype = 'application/json';
     }
     args.push(("--format"));
     args.push((format));
@@ -126,28 +126,41 @@ const handler = script => function (req, res) {
     return cmd.on('close', function(code) {
       logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
       const outputObject = out;
-      if (format) {
-        res.set('Content-Type', contenttype);
-        if (format === 'csv') {
-          res.set('Content-Disposition', 'inline; filename="'+req.params.country_code+'.csv"');
-        }
+
+      res.set('Access-Control-Allow-Origin', '*');
+      if (code===0){
+        status_code=200
+      }
+      else{
+        status_code=500
       }
       if (importId){
         console.log(out);
         out=out.replace(/'/g, '"')
         console.log(out);
         var output_check=JSON.parse(out);
-        console.log(output_check.status_code);
+        /*console.log(output_check.status_code);*/
+        status_code=output_check.status_code;
+      res.set('Content-Type', 'application/json');
     }
-      return res.status(output_check.status_code).send({
-        response: {
-          status: code === 0 ? 200 : 500,
-          headers: {
-            'Access-Control-Allow-Origin' : '*'
-          },
-          body: out,
-        }
-      });
+    try {
+      var output_check=JSON.parse(out);
+      contenttype = 'application/json';
+      if(output_check.type){
+      if (output_check.type === "ImapCountryLockedForPeriodError"){
+        status_code=409
+      }
+    }
+    } catch (e) {
+      console.log("response is not JSON");
+    }
+    if (format) {
+      res.set('Content-Type', contenttype);
+      if (format === 'csv') {
+        res.set('Content-Disposition', 'inline; filename="'+req.params.country_code+'.csv"');
+      }
+    }
+    return res.status(status_code).send(out);
   })
 }
 
@@ -180,20 +193,31 @@ const handler = script => function (req, res) {
 
     return cmd.on('close', function(code) {
       logger.info(`[${openhimTransactionID}] Script exited with status ${code}`);
-      res.set('Content-Type', 'application/json+openhim')
-      return res.send({
-        'x-mediator-urn': config.getMediatorConf().urn,
-        status: code === 0 ? 'Successful' : 'Failed',
-        response: {
-          status: code === 0 ? 202 : 500,
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin' : '*'
-          },
-          body: out,
-          timestamp: new Date()
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Content-Type', 'application/json');
+      if (code===0){
+        status_code=200
+      }
+      else{
+        status_code=500
+      }
+
+      var output_check=JSON.parse(out);
+      status=output_check.status;
+      if (status==="Error"){
+        status_code=400;
+      }
+      try {
+        var output_check=JSON.parse(out);
+        if(output_check.type){
+        if (output_check.type === "ImapCountryLockedForPeriodError"){
+          status_code=409
         }
-      })
+      }
+      } catch (e) {
+        console.log("response is not JSON");
+      }
+    return res.status(status_code).send(out);
     })
   }
 }
