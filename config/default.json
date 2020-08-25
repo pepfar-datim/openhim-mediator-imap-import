@@ -1,7 +1,7 @@
 {
   "server": {
     "hostname": "localhost",
-    "port": 5015
+    "port": 5016
   },
   "logger": {
     "level": "info"
