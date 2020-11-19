@@ -151,8 +151,11 @@ const handler = script => function (req, res) {
         status_code=409
       }
     }
+    else if (output_check.message.includes("404 Client Error")){
+      status_code=404
+    }
     } catch (e) {
-      console.log("response is not JSON");
+      console.log("error parsing message");
     }
     if (format) {
       res.set('Content-Type', contenttype);
