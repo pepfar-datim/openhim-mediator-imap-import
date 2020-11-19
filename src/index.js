@@ -150,10 +150,11 @@ const handler = script => function (req, res) {
       if (output_check.type === "ImapCountryLockedForPeriodError"){
         status_code=409
       }
+      else if (String(output_check.message).includes("404 Client Error")){
+        status_code=404;
+      }
     }
-    else if (output_check.message.includes("404 Client Error")){
-      status_code=404
-    }
+
     } catch (e) {
       console.log("error parsing message");
     }
@@ -163,6 +164,7 @@ const handler = script => function (req, res) {
         res.set('Content-Disposition', 'inline; filename="'+req.params.country_code+'.csv"');
       }
     }
+    console.log(status_code);
     return res.status(status_code).send(out);
   })
 }
