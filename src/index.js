@@ -150,7 +150,7 @@ const handler = script => function (req, res) {
       if (output_check.type === "ImapCountryLockedForPeriodError"){
         status_code=409
       }
-      else if (String(output_check.message).includes("404 Client Error")){
+      else if (String(output_check.message).includes("404 Client Error") || output_check.type === "DatimUnknownCountryPeriodError"){
         status_code=404;
       }
     }
