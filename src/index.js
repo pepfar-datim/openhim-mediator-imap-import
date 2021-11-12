@@ -248,7 +248,7 @@ const startExpress = () => getAvailableScripts(function(err, scriptNames) {
   app.use(cors());
 
   app.use(bodyParser.text());
-  app.use(bodyParser.json());
+  app.use(bodyParser.json({limit: '50mb'}));
   app.use(fileUpload());
 
   if (config.getConf().scripts) {
