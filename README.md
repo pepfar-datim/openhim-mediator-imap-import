@@ -8,7 +8,7 @@ OpenHIM Mediator for handling user requests to import indicator mappings in OCL.
 ## installation
 
 - Git clone the repository  into `/usr/share/`
-- `sudo vim /usr/share/openhim-mediator-imap-import/config/default.json` to change the config as needed.
+- `sudo vim /usr/share/openhim-mediator-imap-import/config/default.json` to change the config as needed..
 - `sudo vim /etc/init/openhim-mediator-imap-import.conf `
 ```
 # OpenHIM imap-import mediator
