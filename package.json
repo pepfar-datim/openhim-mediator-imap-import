@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "node --harmony src/",
-    "preinstall": "pip install -r /usr/share/openhim-mediator-imap-import/scripts/requirements.txt",
+    "preinstall": "pip3 install -r /usr/share/openhim-mediator-imap-import/scripts/requirements.txt",
     "pretest": "bash scripts/tests/pretest.sh",
     "test": "mocha",
     "test:lint": "standard src/**/*.js",
