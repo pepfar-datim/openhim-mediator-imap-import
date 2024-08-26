@@ -117,7 +117,7 @@ const handler = script => function (req, res) {
     args.push((format));
 
     args.unshift(scriptCmd);
-    const cmd = spawn('/usr/bin/python3',args);
+    const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim_imap/bin/python3',args);
     logger.info(`[${openhimTransactionID}] Executing ${scriptCmd} ${args.join(' ')}`);
     const appendToOut = data => out = `${out}${data}`;
     cmd.stdout.on('data', appendToOut);
@@ -190,7 +190,7 @@ const handler = script => function (req, res) {
   });
   args.push(importPath);
   args.unshift(scriptCmd);
-  const cmd = spawn('/usr/bin/python3',args);
+  const cmd = spawn('/home/openhim-core/.local/share/virtualenvs/ocl_datim_imap/bin/python3',args);
   logger.info(`[${openhimTransactionID}] Executing ${scriptCmd} ${args.join(' ')}`);
     const appendToOut = data => out = `${out}${data}`;
     cmd.stdout.on('data', appendToOut);
